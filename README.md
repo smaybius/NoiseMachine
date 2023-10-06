@@ -15,7 +15,7 @@ Built for .NET 7 or higher.
 
 ## Available tone types
 
-- Binaural beats (right ear = left ear + frequency)
+- Binaural beats (right ear = left ear + set frequency)
 - Isochronic tones (volume goes on and off at a rate of the set frequency)
 - Solfeggio frequencies (tone is at the set frequency)
 
@@ -29,3 +29,11 @@ Built for .NET 7 or higher.
 - C# implementation of the Perlin noise algorithm is from [Gaming32/ArrayV](https://github.com/Gaming32/ArrayV), which is under the MIT license
 - Pink noise algorithm is under the BSD-3-clause license
 - Random extensions are from <https://bitbucket.org/Superbest/superbest-random> which is under an unknown license.
+
+## Platforms
+
+- Windows (only tested on 64-bit version)
+- Android (only tested on x86_64)
+- Windows on ARM (untested)
+- Web (untested)
+- iOS (untested)
