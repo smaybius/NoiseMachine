@@ -1,0 +1,3 @@
+[submodule "NoiseMachineDotNet/extern/miniaudio"]
+	path = NoiseMachineDotNet/extern/miniaudio
+	url = https://github.com/mackron/miniaudio
