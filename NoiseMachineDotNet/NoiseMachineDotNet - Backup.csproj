@@ -6,7 +6,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
-    <Platforms>AnyCPU;x86;ARM32;ARM64;x64</Platforms>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
 
   
@@ -45,25 +45,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="libs\arm64\" />
-    <Folder Include="libs\arm32\" />
-    <Folder Include="libs\wasm\" />
-    <Folder Include="libs\x86\" />
-    <Folder Include="libs\x64\" />
+    <Folder Include="lib\wasm\" />
   </ItemGroup>
-	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="cd $(ProjectDir)&#xD;&#xA;rd /s /q &quot;lib/bindings/Miniaudio&quot;&#xD;&#xA;ClangSharpPInvokeGenerator -f extern/miniaudio/miniaudio.h -o lib/bindings/Miniaudio" />
-	</Target>
 
-  <!--Native libraries can't target AnyCPU.-->
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(Platform)' != 'AnyCPU'">
-    <PropertyGroup ><!--Set GCC to target a specific arch regardless of the host machine-->
-      <GccArch Condition="'$(Platform)'=='x86'">i686-linux-gnu</GccArch>
-      <GccArch Condition="'$(Platform)'=='x64'">x86_64-linux-gnu</GccArch>
-      <GccArch Condition="'$(Platform)'=='arm32'">arm-linux-gnueabi</GccArch>
-      <GccArch Condition="'$(Platform)'=='arm64'">aarch64-linux-gnu</GccArch>
-    </PropertyGroup>
-    <Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))" Command="cd $(ProjectDir)&#xD;&#xA;cl /LD extern/miniaudio.c /Felibs/$(Platform)/miniaudio.dll /Folibs/$(Platform)/miniaudio.obj" />
-    <Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" Command="cd $(ProjectDir)&#xD;&#xA;$(GccArch)-gcc -shared -o libs/$(Platform)/miniaudio_linux.so extern/miniaudio.c -lpthread -lm -ldl" />
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="cd $(ProjectDir)/lib/bindings&#xD;&#xA;rd /s /q &quot;Miniaudio&quot;&#xD;&#xA;ClangSharpPInvokeGenerator -f ../../extern/miniaudio/miniaudio.h -o Miniaudio&#xD;&#xA;" />
   </Target>
 </Project>

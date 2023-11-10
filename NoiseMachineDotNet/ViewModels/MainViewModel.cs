@@ -25,20 +25,29 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         Init();
-        if (OperatingSystem.IsAndroid()) return;
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS() || OperatingSystem.IsWatchOS()) return; //conflicts with the non-desktop native libs
         string subfolder = RuntimeInformation.ProcessArchitecture switch
         {
             Architecture.X86 => "x86",
             Architecture.X64 => "x64",
             Architecture.Arm64 => "arm64",
             Architecture.Arm => "arm32",
-            _ => throw new Exception("Dude, wuts ur processor arch???"),
+            _ => throw new Exception("Dude, wuts ur processor arch????"),
         };
-        var libraryPath = "lib/" + subfolder + $"/{LibraryName}.so";
+        var libraryPath = "If dis string ain't change, dis app dunno ur pc or cpu. Thankies 4 comin 2 muh ted tawk";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) // Are we all microsofty?
         {
-            libraryPath = "lib/" + subfolder + $"/{LibraryName}.dll";
+            libraryPath = "libs/" + subfolder + $"/{LibraryName}.dll";
         }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD)) // Are we on Linux's pushover self?
+        {
+            libraryPath = "libs/" + subfolder + $"/{LibraryName}_bsd.so";
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) // Are we with the penguin army?
+        {
+            libraryPath = "libs/" + subfolder + $"/{LibraryName}_linux.so";
+        }
+        if (RuntimeInformation.ProcessArchitecture == Architecture.Wasm) libraryPath = "libs/wasm" + $"/{LibraryName}.wasm";
 
         NativeLibrary.SetDllImportResolver(typeof(MainViewModel).Assembly, (name, assembly, path) =>
         {
@@ -47,7 +56,7 @@ public partial class MainViewModel : ViewModelBase
                 return NativeLibrary.Load(libraryPath);
             }
 
-            return IntPtr.Zero;
+            throw new Exception("Where's miniaudio? TELL ME NOW NOW NOOOOWWW!!!!!!");
         });
         
     }

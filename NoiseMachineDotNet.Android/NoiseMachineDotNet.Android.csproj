@@ -10,8 +10,10 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
     <Platforms>AnyCPU;x86</Platforms>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Icon.png" />
     <None Remove="lib\arm32\miniaudio.so" />
     <None Remove="lib\arm64\miniaudio.so" />
     <None Remove="lib\x64\miniaudio.so" />
@@ -22,6 +24,10 @@
     <AndroidResource Include="Icon.png">
       <Link>Resources\drawable\Icon.png</Link>
     </AndroidResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icon.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,4 +64,13 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AndroidNativeLibrary>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="libs\arm64-v8a\" />
+    <Folder Include="libs\x86\" />
+  </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="cd jni &amp;&amp; ndk-build" />
+  </Target>
 </Project>
