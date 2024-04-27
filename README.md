@@ -35,6 +35,7 @@ Built for .NET 7 or higher.
 - Windows on ARM (untested)
 - Web (untested)
 - iOS (untested)
+- Linux (untested)
 
 ## Required workloads/components
 
@@ -45,7 +46,7 @@ Built for .NET 7 or higher.
 - .NET SDK for Android
 - .NET SDK for iOS (for iPhone versions)
 - .NET SDK for Mac Catalyst (for Mac and iPad versions)
-- All of the search results for "latest" under "Compilers, build tools, and runtimes" and "SDKs, libraries, and frameworks" except for the Spectre-mitigated versions.
+- Clang/LLVM, including llvm-dev on Linux
 
 ## Building Miniaudio
 
@@ -65,4 +66,6 @@ The Miniaudio source code is included as a git submodule, and bindings are autom
 </Target>
 ```
 
-Miniaudio is compiled as a DLL if the host machine is Windows, or a .so file if Linux. In the commands, the `&#xD;&#xA;` is a line break. The Windows part executes `cl.exe`, a command-line tool that uses MSVC on an individual code file, and the `/LD` flag specifies the output as a DLL file. `/Fe` and `/Fo` are output flags. On the Linux part, it uses a specific GCC cross-compiler depending on which target platform is specified. For example, if "x64" is set, the final command is `x86_64-linux-gnu-gcc -shared -o libs/x64/miniaudio_linux.so extern/miniaudio.c -lpthread -lm -ldl`. To build for WebAssembly, use emscripten.
+Miniaudio is compiled as a DLL if the host machine is Windows, or a .so file if Linux. In the commands, the `&#xD;&#xA;` is a line break. The Windows part executes `cl.exe`, a command-line tool that uses MSVC on an individual code file, and the `/LD` flag specifies the output as a DLL file. `/Fe` and `/Fo` are output flags. On the Linux part, it uses a specific GCC cross-compiler depending on which target platform is specified. For example, if "x64" is set, the final command is `x86_64-linux-gnu-gcc -shared -o libs/x64/miniaudio_linux.so extern/miniaudio.c -lpthread -lm -ldl`.
+
+For Linux, LibClang and LibClangSharp must be manually merged with the ClangSharpPInvokeGenerator. To do that, copy each .so file from the .nupkg files of LibClang and LibClangSharp into `~/.dotnet/tools/.store/clangsharppinvokegenerator/[version]/clangsharppinvokegenerator/[version]/tools/net8.0/any`.

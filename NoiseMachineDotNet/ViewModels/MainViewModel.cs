@@ -5,6 +5,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Meadow.Gateways.Bluetooth;
+using Meadow.Units;
 using MiniAudioSharp;
 using System;
 using System.Diagnostics;
@@ -21,7 +22,7 @@ namespace NoiseMachineDotNet.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    private string LibraryName = "miniaudio";
+    private const string LibraryName = "miniaudio";
     public MainViewModel()
     {
         Init();
@@ -111,7 +112,7 @@ public partial class MainViewModel : ViewModelBase
     private static string? buttonText;
     private const int sampleRate = 44100;
     private const double frequency = 104;
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     static unsafe void ToneCallback(ma_device* pDevice, void* pOutput, void* pInput, uint frameCount)
     {
         float* pOut = (float*)pOutput;
@@ -149,45 +150,10 @@ public partial class MainViewModel : ViewModelBase
             }
         }
     }
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     static unsafe void NoiseCallback(ma_device* pDevice, void* pOutput, void* pInput, uint frameCount)
     {
-        double step = 1d / 2048;
-        int octave = 11;
-        float* pOut = (float*)pOutput;
-        for (uint i = 0; i < frameCount; i++)
-        {
-            noisePosition += frequency / sampleRate; //Reserved for noise types that use the X coordinate of the graph
-            if (whiteNoiseChecked)
-            {
-                pOut[2 * i] = (float)(noiseVolume * 0.5 * (Random.Shared.Next(-10000,10000) / 10000.0d));
-            }
-            else if (pinkNoiseChecked)
-            {
-                pOut[2 * i] = (float)(noiseVolume * 0.25 * source.NextValue());
-            }
-            else if (perlinNoiseChecked)
-            {
-                pOut[2 * i] = (float)(noiseVolume * PerlinNoise.ReturnFracBrownNoise(randomStart, octave));
-                randomStart += step;
-            }
-            else if (brownianNoiseChecked)
-            {
-                if (brownpos >= 1)
-                    brownpos += Random.Shared.Next(-50, 0) / 1000d;
-                else if (brownpos <= -1)
-                    brownpos += Random.Shared.Next(0, 50) / 1000d;
-                else
-                    brownpos += Random.Shared.Next(-50, 50) / 1000d;
-                
-                pOut[2 * i] = (float)(noiseVolume * brownpos);
-            }
-            pOut[2 * i + 1] = pOut[2 * i]; //Keep it mono, by copying one channel to the other
-            noisePosition += frequency / sampleRate; //Reserved for noise types that use the X coordinate of the graph
-            if (lowFilterChecked)
-            {
-            }
-        }
+        
     }
 
     private static unsafe ma_lpf* lpf;
@@ -207,6 +173,9 @@ public partial class MainViewModel : ViewModelBase
     private unsafe static ma_context* pToneContext;
     private unsafe static ma_device* pNoiseDevice;
     private unsafe static ma_context* pNoiseContext;
+    private unsafe static ma_noise* pWhiteNoise;
+    private unsafe static ma_noise* pPinkNoise;
+    private unsafe static ma_noise* pBrownNoise;
     private static double noisePosition;
 
     ~MainViewModel()
@@ -248,6 +217,9 @@ public partial class MainViewModel : ViewModelBase
         #region Noise
         
         ma_device_config NoiseDeviceConfig;
+        ma_noise_config whiteConfig = Miniaudio.ma_noise_config_init(ma_format.ma_format_f32, 2, ma_noise_type.ma_noise_type_white, 4321, 1);
+        ma_noise_config pinkConfig = Miniaudio.ma_noise_config_init(ma_format.ma_format_f32, 2, ma_noise_type.ma_noise_type_pink, 4321, 1);
+        ma_noise_config brownConfig = Miniaudio.ma_noise_config_init(ma_format.ma_format_f32, 2, ma_noise_type.ma_noise_type_brownian, 4321, 1);
         pNoiseDevice = (ma_device*)NativeMemory.Alloc((nuint)sizeof(ma_device));
         pNoiseContext = (ma_context*)NativeMemory.Alloc((nuint)sizeof(ma_context));
         lpf = (ma_lpf*)NativeMemory.Alloc((nuint)sizeof(ma_lpf));
@@ -268,6 +240,19 @@ public partial class MainViewModel : ViewModelBase
         NoiseDeviceConfig.playback.channels = 2;
         NoiseDeviceConfig.sampleRate = sampleRate;
         NoiseDeviceConfig.dataCallback = &NoiseCallback;
+
+        if (Miniaudio.ma_noise_init(&whiteConfig, null, pWhiteNoise) != ma_result.MA_SUCCESS)
+        {
+            throw new Exception("White noise turned into silence? LOLWUT????");
+        }
+        if (Miniaudio.ma_noise_init(&pinkConfig, null, pPinkNoise) != ma_result.MA_SUCCESS)
+        {
+            throw new Exception("Pink noise turned into silence? LOLWUT????");
+        }
+        if (Miniaudio.ma_noise_init(&brownConfig, null, pBrownNoise) != ma_result.MA_SUCCESS)
+        {
+            throw new Exception("Brown noise turned into silence? LOLWUT????");
+        }
 
         ma_lpf_config lpfconfig = Miniaudio.ma_lpf_config_init(ma_format.ma_format_f32, 2, sampleRate, filterCutoff, 1);
         if (Miniaudio.ma_lpf_init(&lpfconfig, null, lpf) != ma_result.MA_SUCCESS)
@@ -305,6 +290,7 @@ public partial class MainViewModel : ViewModelBase
 
         Miniaudio.ma_device_uninit(pNoiseDevice);
         Miniaudio.ma_context_uninit(pNoiseContext);
+        //Miniaudio.ma_noise_uninit(pWhiteNoise, &NoiseCallback);
         NativeMemory.Free(pNoiseContext);
         NativeMemory.Free(pNoiseDevice);
         NativeMemory.Free(lpf);

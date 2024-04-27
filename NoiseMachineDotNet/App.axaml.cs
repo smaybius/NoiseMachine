@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace NoiseMachineDotNet;
 
-public partial class App : AvaloniaMeadowApplication<Linux<RaspberryPi>>
+public partial class App : AvaloniaMeadowApplication<Linux>
 {
 
     public override void Initialize()

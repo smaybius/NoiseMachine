@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0-ios16.1</TargetFramework>
+    <TargetFramework>net8.0-ios16.1</TargetFramework>
     <SupportedOSPlatformVersion>15.7.9</SupportedOSPlatformVersion>
     <ProvisioningType>manual</ProvisioningType>
     <Nullable>enable</Nullable>
@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.iOS" Version="11.0.4" />
+    <PackageReference Include="Avalonia.iOS" Version="11.0.10" />
   </ItemGroup>
 
   <ItemGroup>
