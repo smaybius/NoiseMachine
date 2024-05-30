@@ -1,104 +1,199 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Platform;
-using Avalonia.Threading;
+﻿using Avalonia.Controls;
+using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Meadow.Gateways.Bluetooth;
-using Meadow.Units;
-using MiniAudioSharp;
+using NoiseMachineDotNet.libs.bindings.Miniaudio;
+using Silk.NET.Vulkan;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
+using System.Reflection;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.X86;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+using YamlDotNet.Core.Tokens;
 
 namespace NoiseMachineDotNet.ViewModels;
-
 public partial class MainViewModel : ViewModelBase
 {
-    private const string LibraryName = "miniaudio";
+    
     public MainViewModel()
     {
         Init();
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS() || OperatingSystem.IsWatchOS()) return; //conflicts with the non-desktop native libs
-        string subfolder = RuntimeInformation.ProcessArchitecture switch
-        {
-            Architecture.X86 => "x86",
-            Architecture.X64 => "x64",
-            Architecture.Arm64 => "arm64",
-            Architecture.Arm => "arm32",
-            _ => throw new Exception("Dude, wuts ur processor arch????"),
-        };
-        var libraryPath = "If dis string ain't change, dis app dunno ur pc or cpu. Thankies 4 comin 2 muh ted tawk";
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) // Are we all microsofty?
-        {
-            libraryPath = "libs/" + subfolder + $"/{LibraryName}.dll";
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD)) // Are we on Linux's pushover self?
-        {
-            libraryPath = "libs/" + subfolder + $"/{LibraryName}_bsd.so";
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) // Are we with the penguin army?
-        {
-            libraryPath = "libs/" + subfolder + $"/{LibraryName}_linux.so";
-        }
-        if (RuntimeInformation.ProcessArchitecture == Architecture.Wasm) libraryPath = "libs/wasm" + $"/{LibraryName}.wasm";
+    }
 
-        NativeLibrary.SetDllImportResolver(typeof(MainViewModel).Assembly, (name, assembly, path) =>
+
+    private static bool filterEnabled;
+
+    public unsafe bool FilterEnabled
+    {
+        get => filterEnabled;
+        set
         {
-            if (name == LibraryName)
+            SetProperty(ref filterEnabled, value);
+            if (!Playing) return;
+            if (value)
             {
-                return NativeLibrary.Load(libraryPath);
+                Miniaudio.ma_node_set_output_bus_volume(filter, 0, (float)FilterGain / 100);
             }
-
-            throw new Exception("Where's miniaudio? TELL ME NOW NOW NOOOOWWW!!!!!!");
-        });
-        
+            else
+            {
+                Miniaudio.ma_node_set_output_bus_volume(filter, 0, 0);
+            }
+        }
     }
 
     [ObservableProperty]
-    private static double filterGain;
-    [ObservableProperty]
-    private static double filterBandwidth;
-    [ObservableProperty]
-    private static double filterCutoff;
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NoisePercentage))]
+    private static bool playing = false;
+    
+    private static double filterGain = 100;
+
+    public unsafe double FilterGain
+    {
+        get => filterGain;
+        set
+        {
+            SetProperty(ref filterGain, value);
+            if (!FilterEnabled) return;
+            Miniaudio.ma_node_set_output_bus_volume(filter, 0, (float)value / 100);
+        }
+    }
+
+
+    private static double filterOrder = 1;
+
+    public double FilterOrder
+    {
+        get => filterOrder;
+        set
+        {
+            SetProperty(ref filterOrder, value);
+            FilterChanged();
+        }
+    }
+
+    private static double filterCutoff = 200;
+
+    public double FilterCutoff
+    {
+        get => filterCutoff;
+        set
+        {
+            SetProperty(ref filterCutoff, value);
+            FilterChanged();
+        }
+    }
+
+
+    private static double a0;
+    public double A0
+    {
+        get => a0;
+        set
+        {
+            SetProperty(ref a0, value);
+            LowFilterChanged();
+        }
+    }
+
+    private static double a1;
+    public double A1
+    {
+        get => a1;
+        set
+        {
+            SetProperty(ref a1, value);
+            LowFilterChanged();
+        }
+    }
+
+    private static double a2;
+    public double A2
+    {
+        get => a2;
+        set
+        {
+            SetProperty(ref a2, value);
+            LowFilterChanged();
+        }
+    }
+
+    private static double b0;
+    public double B0
+    {
+        get => b0;
+        set
+        {
+            SetProperty(ref b0, value);
+            LowFilterChanged();
+        }
+    }
+
+    private static double b1;
+    public double B1
+    {
+        get => b1;
+        set
+        {
+            SetProperty(ref b1, value);
+            LowFilterChanged();
+        }
+    }
+
+    private static double b2;
+    public double B2
+    {
+        get => b2;
+        set
+        {
+            SetProperty(ref b2, value);
+            LowFilterChanged();
+        }
+    }
+
     private static double noiseVolume;
+    public unsafe double NoiseVolume
+    {
+        get => noiseVolume;
+        set
+        {
+            if (SetProperty(ref noiseVolume, value))
+            {
+                OnPropertyChanged(nameof(NoisePercentage));
+
+                if (Playing)
+                {
+                    _ = Miniaudio.ma_device_set_master_volume(pNoiseDevice, (float)value);
+                }
+            }
+        }
+    }
     public string NoisePercentage => "Noise Volume: " + (100 * NoiseVolume).ToString() + "%";
     [ObservableProperty]
     private static bool whiteNoiseChecked;
     [ObservableProperty]
     private static bool pinkNoiseChecked;
     [ObservableProperty]
-    private static bool perlinNoiseChecked;
-    [ObservableProperty]
     private static bool brownianNoiseChecked;
-    [ObservableProperty]
-    private static bool lowFilterChecked;
-    [ObservableProperty]
-    private static bool bandFilterChecked;
-    [ObservableProperty]
-    private static bool highFilterChecked;
-    [ObservableProperty]
-    private static bool notchFilterChecked;
-    [ObservableProperty]
-    private static bool allPassFilterChecked;
-    [ObservableProperty]
-    private static bool peakingFilterChecked;
-    [ObservableProperty]
-    private static bool lowShelfFilterChecked;
-    [ObservableProperty]
-    private static bool highShelfFilterChecked;
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(TonePercentage))]
+
     private static double toneVolume;
+    public unsafe double ToneVolume
+    {
+        get => toneVolume;
+        set
+        {
+            if (SetProperty(ref toneVolume, value))
+            {
+                OnPropertyChanged(nameof(TonePercentage));
+
+                if (Playing)
+                {
+                    _ = Miniaudio.ma_device_set_master_volume(pToneDevice, (float)value);
+                }
+            }
+        }
+    }
+
+
     public string TonePercentage => "Tone Volume: " + (100 * ToneVolume).ToString() + "%";
     [ObservableProperty]
     private static bool binauralChecked;
@@ -112,33 +207,50 @@ public partial class MainViewModel : ViewModelBase
     private static string? buttonText;
     private const int sampleRate = 44100;
     private const double frequency = 104;
+
+    [ObservableProperty]
+    private static string? filterName;
+
+
+
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-    static unsafe void ToneCallback(ma_device* pDevice, void* pOutput, void* pInput, uint frameCount)
+    private static unsafe void ToneCallback(ma_device* pDevice, void* pOutput, void* pInput, uint frameCount)
     {
         float* pOut = (float*)pOutput;
         for (uint i = 0; i < frameCount; i++)
         {
             pOut[2 * i] = (float)(Math.Sin(2 * Math.PI * phase) * toneVolume * isoVolume);      // Left channel
-            pOut[2 * i + 1] = (float)(Math.Sin(2 * Math.PI * phase2) * toneVolume * isoVolume); // Right channel
+            pOut[(2 * i) + 1] = (float)(Math.Sin(2 * Math.PI * phase2) * toneVolume * isoVolume); // Right channel
 
             if (binauralChecked)
             {
                 isoVolume = 1;
                 phase += frequency / sampleRate;
                 if (phase >= 1.0)
+                {
                     phase -= 1.0;
+                }
+
                 phase2 += (frequency + toneFreq) / sampleRate;
                 if (phase2 >= 1.0)
+                {
                     phase2 -= 1.0;
+                }
             }
             else if (isochronicChecked)
             {
                 phase += frequency / sampleRate;
                 if (phase >= 1.0)
+                {
                     phase -= 1.0;
+                }
+
                 phase2 += frequency / sampleRate;
                 if (phase2 >= 1.0)
+                {
                     phase2 -= 1.0;
+                }
+
                 isophase += Math.PI * toneFreq / sampleRate;
                 isoVolume = Math.Clamp(Math.Sin(isophase), 0, 0.25) * 4;
             }
@@ -151,159 +263,147 @@ public partial class MainViewModel : ViewModelBase
         }
     }
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-    static unsafe void NoiseCallback(ma_device* pDevice, void* pOutput, void* pInput, uint frameCount)
+    private static unsafe void NoiseCallback(ma_device* pDevice, void* pOutput, void* pInput, uint frameCount)
     {
-        
+        Miniaudio.ma_node_graph_read_pcm_frames(pNodeGraph, pOutput, frameCount, null);
     }
 
-    private static unsafe ma_lpf* lpf;
-    private static unsafe ma_hpf* hpf;
-    private static unsafe ma_bpf* bpf;
-    private static unsafe ma_notch2* notch2;
-    private static unsafe ma_peak2* peak2;
-    private static unsafe ma_loshelf2* loshelf2;
-    private static unsafe ma_hishelf2* hishelf2;
+    private static unsafe ma_biquad_node* filter;
 
-    [ObservableProperty]
     private static double isoVolume = 1;
     private static double isophase;
     private static double phase = 0;
     private static double phase2 = 0;
-    private unsafe static ma_device* pToneDevice;
-    private unsafe static ma_context* pToneContext;
-    private unsafe static ma_device* pNoiseDevice;
-    private unsafe static ma_context* pNoiseContext;
-    private unsafe static ma_noise* pWhiteNoise;
-    private unsafe static ma_noise* pPinkNoise;
-    private unsafe static ma_noise* pBrownNoise;
-    private static double noisePosition;
+    private static unsafe ma_device* pToneDevice;
+    private static unsafe ma_device* pNoiseDevice;
+    private static unsafe ma_noise_node* pNoise;
+    private static unsafe ma_node_graph* pNodeGraph;
+
+    public struct ma_noise_node
+    {
+        public ma_data_source_node node;
+        public ma_noise noise;
+    }
 
     ~MainViewModel()
     {
         StopSounds();
     }
-    public static unsafe void StartSounds()
+
+    public unsafe void StartSounds()
     {
         #region Tone
-        ma_device_config toneDeviceConfig;
         pToneDevice = (ma_device*)NativeMemory.Alloc((nuint)sizeof(ma_device));
-        pToneContext = (ma_context*)NativeMemory.Alloc((nuint)sizeof(ma_context));
-        if (Miniaudio.ma_context_init(null, 0, null, pToneContext) != ma_result.MA_SUCCESS)
-        {
-            Console.WriteLine("Failed to initialize miniaudio context\n");
-            StopSounds();
-        }
 
-        toneDeviceConfig = Miniaudio.ma_device_config_init(ma_device_type.ma_device_type_playback);
+
+        ma_device_config toneDeviceConfig = Miniaudio.ma_device_config_init(ma_device_type.ma_device_type_playback);
         toneDeviceConfig.playback.format = ma_format.ma_format_f32;
         toneDeviceConfig.playback.channels = 2;
         toneDeviceConfig.sampleRate = sampleRate;
         toneDeviceConfig.dataCallback = &ToneCallback;
 
-        if (Miniaudio.ma_device_init(pToneContext, &toneDeviceConfig, pToneDevice) != ma_result.MA_SUCCESS)
+        if (Miniaudio.ma_device_init(null, &toneDeviceConfig, pToneDevice) != ma_result.MA_SUCCESS)
         {
-            Console.WriteLine("Failed to open playback device.\n");
-            StopSounds();
-            return;
+            throw new Exception("Your playback device gives Clark Griswold's Christmas lights a run for its money!");
         }
 
         if (Miniaudio.ma_device_start(pToneDevice) != ma_result.MA_SUCCESS)
         {
-            Console.WriteLine("Failed to start playback device.\n");
-            StopSounds();
-            return;
-        }
-        #endregion
-        #region Noise
-        
-        ma_device_config NoiseDeviceConfig;
-        ma_noise_config whiteConfig = Miniaudio.ma_noise_config_init(ma_format.ma_format_f32, 2, ma_noise_type.ma_noise_type_white, 4321, 1);
-        ma_noise_config pinkConfig = Miniaudio.ma_noise_config_init(ma_format.ma_format_f32, 2, ma_noise_type.ma_noise_type_pink, 4321, 1);
-        ma_noise_config brownConfig = Miniaudio.ma_noise_config_init(ma_format.ma_format_f32, 2, ma_noise_type.ma_noise_type_brownian, 4321, 1);
-        pNoiseDevice = (ma_device*)NativeMemory.Alloc((nuint)sizeof(ma_device));
-        pNoiseContext = (ma_context*)NativeMemory.Alloc((nuint)sizeof(ma_context));
-        lpf = (ma_lpf*)NativeMemory.Alloc((nuint)sizeof(ma_lpf));
-        hpf = (ma_hpf*)NativeMemory.Alloc((nuint)sizeof(ma_hpf));
-        bpf = (ma_bpf*)NativeMemory.Alloc((nuint)sizeof(ma_bpf));
-        notch2 = (ma_notch2*)NativeMemory.Alloc((nuint)sizeof(ma_notch2));
-        peak2 = (ma_peak2*)NativeMemory.Alloc((nuint)sizeof(ma_peak2));
-        loshelf2 = (ma_loshelf2*)NativeMemory.Alloc((nuint)sizeof(ma_loshelf2));
-        hishelf2 = (ma_hishelf2*)NativeMemory.Alloc((nuint)sizeof(ma_hishelf2));
-        if (Miniaudio.ma_context_init(null, 0, null, pNoiseContext) != ma_result.MA_SUCCESS)
-        {
-            Console.WriteLine("Failed to initialize miniaudio context\n");
-            StopSounds();
+            throw new Exception("The future is now thanks to science! Clemontic gear on! O NOES!!! PLAYBACC DEVICE ABOUT 2 AXPLODE!!!!");
         }
 
-        NoiseDeviceConfig = Miniaudio.ma_device_config_init(ma_device_type.ma_device_type_playback);
+        #endregion
+        #region Noise
+
+        pNodeGraph = (ma_node_graph*)NativeMemory.Alloc((nuint)sizeof(ma_node_graph));
+        ma_node_graph_config nodeConfig = Miniaudio.ma_node_graph_config_init(2);
+        if (Miniaudio.ma_node_graph_init(&nodeConfig, null, pNodeGraph) != ma_result.MA_SUCCESS)
+        {
+            StopSounds();
+            throw new Exception("Graphs, graphs, needs more graphs! Ain't no graphs in here! This is completely worthless!");
+        }
+
+        
+        pNoiseDevice = (ma_device*)NativeMemory.Alloc((nuint)sizeof(ma_device));
+        pNoise = (ma_noise_node*)NativeMemory.Alloc((nuint)sizeof(ma_noise_node));
+
+        filter = (ma_biquad_node*)NativeMemory.Alloc((nuint)sizeof(ma_biquad_node));
+
+        ma_device_config NoiseDeviceConfig = Miniaudio.ma_device_config_init(ma_device_type.ma_device_type_playback);
         NoiseDeviceConfig.playback.format = ma_format.ma_format_f32;
         NoiseDeviceConfig.playback.channels = 2;
         NoiseDeviceConfig.sampleRate = sampleRate;
         NoiseDeviceConfig.dataCallback = &NoiseCallback;
 
-        if (Miniaudio.ma_noise_init(&whiteConfig, null, pWhiteNoise) != ma_result.MA_SUCCESS)
+        ma_noise_config noiseconfig = Miniaudio.ma_noise_config_init(ma_format.ma_format_f32, 2, ma_noise_type.ma_noise_type_white, 4321, 1);
+        if (Miniaudio.ma_noise_init(&noiseconfig, null, &pNoise->noise) != ma_result.MA_SUCCESS)
         {
+            StopSounds();
+            throw new Exception("Noise turned into silence? LOLWUT????");
+        }
+
+        ma_data_source_node_config dataconfig = Miniaudio.ma_data_source_node_config_init(&pNoise->noise);
+
+        if (Miniaudio.ma_data_source_node_init(pNodeGraph, &dataconfig, null, &pNoise->node) != ma_result.MA_SUCCESS)
+        {
+            StopSounds();
+            throw new Exception("Y DERE AINT NO SAUCE????");
+        }
+
+        ma_biquad_node_config filterconfig = Miniaudio.ma_biquad_node_config_init(2, (float)B0, (float)B1, (float)B2, (float)A0, (float)A1, (float)A2);
+        if (Miniaudio.ma_biquad_node_init(pNodeGraph, &filterconfig, null, filter) != ma_result.MA_SUCCESS)
+        {
+            StopSounds();
+            throw new Exception("Filter failed to start. Wonder what happened?");
+        }
+
+        if (Miniaudio.ma_node_attach_output_bus(filter, 0, Miniaudio.ma_node_graph_get_endpoint(pNodeGraph), 0) != ma_result.MA_SUCCESS)
+        {
+            StopSounds();
+            throw new Exception("Why won't the filter work?");
+        }
+
+        if (Miniaudio.ma_node_attach_output_bus(&pNoise->node, 0, filter, 0) != ma_result.MA_SUCCESS)
+        {
+            StopSounds();
             throw new Exception("White noise turned into silence? LOLWUT????");
         }
-        if (Miniaudio.ma_noise_init(&pinkConfig, null, pPinkNoise) != ma_result.MA_SUCCESS)
+        if (Miniaudio.ma_device_init(null, &NoiseDeviceConfig, pNoiseDevice) != ma_result.MA_SUCCESS)
         {
-            throw new Exception("Pink noise turned into silence? LOLWUT????");
-        }
-        if (Miniaudio.ma_noise_init(&brownConfig, null, pBrownNoise) != ma_result.MA_SUCCESS)
-        {
-            throw new Exception("Brown noise turned into silence? LOLWUT????");
-        }
-
-        ma_lpf_config lpfconfig = Miniaudio.ma_lpf_config_init(ma_format.ma_format_f32, 2, sampleRate, filterCutoff, 1);
-        if (Miniaudio.ma_lpf_init(&lpfconfig, null, lpf) != ma_result.MA_SUCCESS)
-        {
-            throw new Exception("Filter failed to start. Wonder what happened?");
-        }
-
-        ma_hpf_config hpfconfig = Miniaudio.ma_hpf_config_init(ma_format.ma_format_f32, 2, sampleRate, filterCutoff, 1);
-        if (Miniaudio.ma_hpf_init(&hpfconfig, null, hpf) != ma_result.MA_SUCCESS)
-        {
-            throw new Exception("Filter failed to start. Wonder what happened?");
-        }
-
-        if (Miniaudio.ma_device_init(pNoiseContext, &NoiseDeviceConfig, pNoiseDevice) != ma_result.MA_SUCCESS)
-        {
-            Console.WriteLine("Did your playback device come from Bigmotor? Kinda sus ngl\n");
             StopSounds();
-            return;
+            throw new Exception("Did your playback device come from Bigmotor or smth? Kinda sus ngl\n");
         }
 
         if (Miniaudio.ma_device_start(pNoiseDevice) != ma_result.MA_SUCCESS)
         {
-            Console.WriteLine("Failed to start playback device.\n");
             StopSounds();
-            return;
+            throw new Exception("Ain't science so amazing, that Clemont's playback device invention ain't startin'?\n");
         }
+
+        Miniaudio.ma_device_set_master_volume(pNoiseDevice, (float)NoiseVolume);
+
         #endregion
+        Playing = true;
     }
-    public static unsafe void StopSounds()
+    public unsafe void StopSounds()
     {
+        Playing = false;
         Miniaudio.ma_device_uninit(pToneDevice);
-        Miniaudio.ma_context_uninit(pToneContext);
-        NativeMemory.Free(pToneContext);
         NativeMemory.Free(pToneDevice);
 
+        Miniaudio.ma_node_detach_all_output_buses(pNodeGraph);
         Miniaudio.ma_device_uninit(pNoiseDevice);
-        Miniaudio.ma_context_uninit(pNoiseContext);
-        //Miniaudio.ma_noise_uninit(pWhiteNoise, &NoiseCallback);
-        NativeMemory.Free(pNoiseContext);
+        Miniaudio.ma_node_uninit(pNodeGraph, null);
+        Miniaudio.ma_noise_uninit(&pNoise->noise, null);
+        Miniaudio.ma_biquad_node_uninit(filter, null);
+        NativeMemory.Free(pNodeGraph);
         NativeMemory.Free(pNoiseDevice);
-        NativeMemory.Free(lpf);
-        NativeMemory.Free(hpf);
-        NativeMemory.Free(bpf);
-        NativeMemory.Free(notch2);
-        NativeMemory.Free(peak2);
-        NativeMemory.Free(loshelf2);
-        NativeMemory.Free(hishelf2);
+        NativeMemory.Free(pNoise);
+        NativeMemory.Free(filter);
     }
     public void StartStopSounds()
     {
-        
+
         if (ButtonText == "Start")
         {
             StartSounds();
@@ -317,23 +417,22 @@ public partial class MainViewModel : ViewModelBase
 
     }
 
-    private static double randomStart = Random.Shared.NextDouble() * 32768;
-    private static double brownpos;
-    private static readonly PinkNoise source = new(alpha, poles);
-    private const double alpha = 1.0;
-    private const int poles = 5;
+
     public void Init()
     {
-        NoiseVolume = 0.5;
+        Playing = false;
+        NoiseVolume = 0.5f;
         WhiteNoiseChecked = true;
         FilterCutoff = 200;
         FilterGain = 100;
-        FilterBandwidth = 18;
-        LowFilterChecked = true;
+        FilterOrder = 1;
         ToneVolume = 1;
         BinauralChecked = true;
         ToneFreq = 2.5;
         ButtonText = "Start";
+        FilterName = "lpf";
+        FilterEnabled = false;
+        FilterChanged();
     }
     public void SetToneFreq(double val)
     {
@@ -342,24 +441,99 @@ public partial class MainViewModel : ViewModelBase
 
     public void SetBrainWaves(string val)
     {
-        _ = RandomNumberGenerator.Create();
         switch (val)
         {
             case "Delta":
-                ToneFreq = RandomNumberGenerator.GetInt32(5000, 40000) / 10000d;
+                ToneFreq = NextDouble(0.5, 4); //0.5 to 4
                 break;
             case "Theta":
-                ToneFreq = RandomNumberGenerator.GetInt32(40000, 80000) / 10000d;
+                ToneFreq = NextDouble(4, 8); //4 to 8
                 break;
             case "Alpha":
-                ToneFreq = RandomNumberGenerator.GetInt32(80000, 140000) / 10000d;
+                ToneFreq = NextDouble(8, 14); //8 to 14
                 break;
             case "Beta":
-                ToneFreq = RandomNumberGenerator.GetInt32(140000, 300000) / 10000d;
+                ToneFreq = NextDouble(14, 30); //14 to 30
                 break;
             case "Gamma":
-                ToneFreq = RandomNumberGenerator.GetInt32(300000, 500000) / 10000d;
+                ToneFreq = NextDouble(30, 50); //30 to 50
                 break;
         }
+    }
+
+    public static double NextDouble(double min, double max)
+    {
+        return (Random.Shared.NextDouble() * (max - min)) + min;
+    }
+
+    public void SetFilter(string filt)
+    {
+        FilterName = filt;
+    }
+
+    private static bool highLevel = false;
+
+    public unsafe void FilterChanged()
+    {
+        double omega = 2 * Math.PI * FilterCutoff / sampleRate;
+        double sn = Math.Sin(omega);
+        double cs = Math.Cos(omega);
+        double alpha = sn / (2 * FilterOrder);
+        highLevel = true;
+        switch (FilterName)
+        {
+            case "bpf":
+                B0 = alpha;
+                B1 = 0;
+                B2 = -alpha;
+                A0 = 1 + alpha;
+                A1 = -2 * cs;
+                A2 = 1 - alpha;
+                break;
+            case "lpf":
+                B0 = (1 - cs) / 2;
+                B1 = 1 - cs;
+                B2 = (1 - cs) / 2;
+                A0 = 1 + alpha;
+                A1 = -2 * cs;
+                A2 = 1 - alpha;
+                break;
+            case "hpf":
+                B0 = (1 + cs) / 2;
+                B1 = -(1 + cs);
+                B2 = (1 + cs) / 2;
+                A0 = 1 + alpha;
+                A1 = -2 * cs;
+                A2 = 1 - alpha;
+                break;
+            case "notch":
+                B0 = 1;
+                B1 = -2 * cs;
+                B2 = 1;
+                A0 = 1 + alpha;
+                A1 = -2 * cs;
+                A2 = 1 - alpha;
+                break;
+            case "peak":
+                B0 = 1 + alpha;
+                B1 = -2 * cs;
+                B2 = 1 - alpha;
+                A0 = 1 + alpha;
+                A1 = -2 * cs;
+                A2 = 1 - alpha;
+                break;
+        }
+        highLevel = false;
+        if (!Playing) return;
+        ma_biquad_config config = Miniaudio.ma_biquad_config_init(ma_format.ma_format_f32, 2, B0, B1, B2, A0, A1, A2);
+        Debug.WriteLine(Miniaudio.ma_biquad_node_reinit(&config, filter));
+    }
+
+    public unsafe void LowFilterChanged()
+    {
+        if (!Playing) return;
+        if (highLevel) return;
+        ma_biquad_config config = Miniaudio.ma_biquad_config_init(ma_format.ma_format_f32, 2, B0, B1, B2, A0, A1, A2);
+        Debug.WriteLine(Miniaudio.ma_biquad_node_reinit(&config, filter));
     }
 }

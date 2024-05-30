@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NoiseMachineDotNet": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

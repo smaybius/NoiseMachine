@@ -48,24 +48,13 @@ Built for .NET 7 or higher.
 - .NET SDK for Mac Catalyst (for Mac and iPad versions)
 - Clang/LLVM, including llvm-dev on Linux
 
+
 ## Building Miniaudio
 
-The Miniaudio source code is included as a git submodule, and bindings are automatically generated during prebuild using ClangSharp. The process of compiling Miniaudio is automated via an msbuild prebuild event in NoiseMachineDotNet.csproj if the target arch is not `AnyCPU`:
+The Miniaudio source code is included as a git submodule, and bindings are automatically generated during prebuild using ClangSharp. The process of compiling Miniaudio is automated via an msbuild prebuild event in NoiseMachineDotNet.Desktop.csproj.
 
-```xml
-<!--Native libraries can't target AnyCPU.-->
-<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(Platform)' != 'AnyCPU'">
-  <PropertyGroup ><!--Set GCC to target a specific arch regardless of the host machine-->
-    <GccArch Condition="'$(Platform)'=='x86'">i686-linux-gnu</GccArch>
-    <GccArch Condition="'$(Platform)'=='x64'">x86_64-linux-gnu</GccArch>
-    <GccArch Condition="'$(Platform)'=='arm32'">arm-linux-gnueabi</GccArch>
-    <GccArch Condition="'$(Platform)'=='arm64'">aarch64-linux-gnu</GccArch>
-  </PropertyGroup>
-  <Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))" Command="cd $(ProjectDir)&#xD;&#xA;cl /LD extern/miniaudio.c /Felibs/$(Platform)/miniaudio.dll /Folibs/$(Platform)/miniaudio.obj" />
-  <Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" Command="cd $(ProjectDir)&#xD;&#xA;$(GccArch)-gcc -shared -o libs/$(Platform)/miniaudio_linux.so extern/miniaudio.c -lpthread -lm -ldl" />
-</Target>
-```
-
-Miniaudio is compiled as a DLL if the host machine is Windows, or a .so file if Linux. In the commands, the `&#xD;&#xA;` is a line break. The Windows part executes `cl.exe`, a command-line tool that uses MSVC on an individual code file, and the `/LD` flag specifies the output as a DLL file. `/Fe` and `/Fo` are output flags. On the Linux part, it uses a specific GCC cross-compiler depending on which target platform is specified. For example, if "x64" is set, the final command is `x86_64-linux-gnu-gcc -shared -o libs/x64/miniaudio_linux.so extern/miniaudio.c -lpthread -lm -ldl`.
+Miniaudio is compiled as a DLL if the host machine is Windows, or a .so file if Linux. In the commands, the `&#xD;&#xA;` is a line break. The Windows part executes `cl.exe`, a command-line tool that uses MSVC on an individual code file, and the `/LD` flag specifies the output as a DLL file. `/Fe` and `/Fo` are output flags. On the Linux part, it uses a specific GCC cross-compiler depending on which target platform is specified. For example, if "x64" is set, the final command is `x86_64-linux-gnu-gcc -shared -o libs/x64/miniaudio_linux.so ../extern/miniaudio.c -lpthread -lm -ldl`.
 
 For Linux, LibClang and LibClangSharp must be manually merged with the ClangSharpPInvokeGenerator. To do that, copy each .so file from the .nupkg files of LibClang and LibClangSharp into `~/.dotnet/tools/.store/clangsharppinvokegenerator/[version]/clangsharppinvokegenerator/[version]/tools/net8.0/any`.
+
+The desktop app builds Miniaudio based on the host architecture if `AnyCPU` is specified as the target. To build for other architectures in the command line, go to `NoiseMachineDotNet.Desktop` and enter `dotnet build /p:Platform=` and add either `arm32`, `arm64`, `x64`, or `x86` to the end of that command before executing.

@@ -15,48 +15,75 @@
 	<ScrollViewer>
 		<StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="75,20,75,20">
 			<Label Content="{Binding NoisePercentage}" HorizontalAlignment="Center"/>
-			<Slider Minimum="0" Maximum="1" Value="{Binding NoiseVolume}"/>
+			<Slider Name="NoiseSlider" Minimum="0" Maximum="1" Value="{Binding NoiseVolume}"/>
 			<Label Content="Noise Type:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
 			<WrapPanel HorizontalAlignment="Center">
 
 				<RadioButton IsChecked="{Binding WhiteNoiseChecked}" GroupName="NoiseTypes" Content="White" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
 				<RadioButton IsChecked="{Binding PinkNoiseChecked}" GroupName="NoiseTypes" Content="Pink" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton IsChecked="{Binding PerlinNoiseChecked}" GroupName="NoiseTypes" Content="Perlin" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
 				<RadioButton IsChecked="{Binding BrownianNoiseChecked}" GroupName="NoiseTypes" Content="Brownian" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
 			</WrapPanel>
-			<Label Content="Filter Controls:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-			<WrapPanel HorizontalAlignment="Center">
+			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding Playing}">
+				<Label Content="Filter" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+				<CheckBox IsChecked="{Binding FilterEnabled}"/>
+			</WrapPanel>
+			<Label Content="High-Level Controls:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding FilterEnabled}">
 				<StackPanel>
 					<Label Content="Cutoff:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="0" Maximum="44100" Value="{Binding FilterCutoff}" Increment="100" Width="150"/>
+					<NumericUpDown Minimum="0" Maximum="44100" Value="{Binding FilterCutoff}" Increment="100" Width="130"/>
 				</StackPanel>
 				<StackPanel>
-					<Label Content="Bandwidth:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="0" Maximum="44100" Value="{Binding FilterBandwidth}" Increment="100" Width="150"/>
+					<Label Content="Resonance %:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="0" Maximum="100" Value="{Binding FilterOrder}" Increment="10" Width="130"/>
 				</StackPanel>
 				<StackPanel>
-					<Label Content="Gain:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="0" Maximum="44100" Value="{Binding FilterGain}" Increment="100" Width="150"/>
+					<Label Content="Amount %:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="0" Maximum="100" Value="{Binding FilterGain}" Increment="10" Width="130"/>
 				</StackPanel>
 			</WrapPanel>
 			<Label Content="Filter Type:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-			<WrapPanel HorizontalAlignment="Center">
-				<RadioButton IsChecked="{Binding LowFilterChecked}" GroupName="FilterTypes" Content="Low-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
-				<RadioButton IsChecked="{Binding BandFilterChecked}" GroupName="FilterTypes" Content="Band-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton IsChecked="{Binding HighFilterChecked}" GroupName="FilterTypes" Content="High-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton IsChecked="{Binding NotchFilterChecked}" GroupName="FilterTypes" Content="Notch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton IsChecked="{Binding AllPassFilterChecked}" GroupName="FilterTypes" Content="All-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton IsChecked="{Binding PeakingFilterChecked}" GroupName="FilterTypes" Content="Peaking EQ" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton IsChecked="{Binding LowShelfFilterChecked}" GroupName="FilterTypes" Content="Low-Shelf" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton IsChecked="{Binding HighShelfFilterChecked}" GroupName="FilterTypes" Content="High-Shelf" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
+			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding FilterEnabled}">
+				<RadioButton Command="{Binding SetFilter}" IsChecked="True" CommandParameter="lpf" GroupName="FilterTypes" Content="Low-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
+				<RadioButton Command="{Binding SetFilter}" CommandParameter="bpf" GroupName="FilterTypes" Content="Band-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
+				<RadioButton Command="{Binding SetFilter}" CommandParameter="hpf" GroupName="FilterTypes" Content="High-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
+				<RadioButton Command="{Binding SetFilter}" CommandParameter="notch" GroupName="FilterTypes" Content="Notch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
+				<RadioButton Command="{Binding SetFilter}" CommandParameter="peak" GroupName="FilterTypes" Content="Peaking EQ" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
 			</WrapPanel>
 			<Label Content="Noise Presets:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-			<WrapPanel HorizontalAlignment="Center">
+			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding FilterEnabled}">
 				<Button Content="Default"/>
 				<Button Content="Pink Noise"/>
 				<Button Content="Brown Noise"/>
 				<Button Content="Green Noise"/>
 				<Button Content="Blue Noise"/>
+			</WrapPanel>
+			<Label Content="Low-Level Controls:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding FilterEnabled}">
+				<StackPanel>
+					<Label Content="b0:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B0}" Increment="0.01" Width="130"/>
+				</StackPanel>
+				<StackPanel>
+					<Label Content="b1:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B1}" Increment="0.01" Width="130"/>
+				</StackPanel>
+				<StackPanel>
+					<Label Content="b2:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B2}" Increment="0.01" Width="130"/>
+				</StackPanel>
+				<StackPanel>
+					<Label Content="a0:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="1" Maximum="10" Value="{Binding A0}" Increment="0.01" Width="130"/>
+				</StackPanel>
+				<StackPanel>
+					<Label Content="a1:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding A1}" Increment="0.01" Width="130"/>
+				</StackPanel>
+				<StackPanel>
+					<Label Content="a2:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding A2}" Increment="0.01" Width="130"/>
+				</StackPanel>
 			</WrapPanel>
 			<Separator Margin="0,30,0,30"/>
 			<Label Content="{Binding TonePercentage}" HorizontalAlignment="Center"/>

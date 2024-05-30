@@ -2,7 +2,6 @@
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Meadow;
-using Meadow.Pinouts;
 using NoiseMachineDotNet.ViewModels;
 using NoiseMachineDotNet.Views;
 using System.Threading.Tasks;

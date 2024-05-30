@@ -6,7 +6,7 @@
         xmlns:views="clr-namespace:NoiseMachineDotNet.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="NoiseMachineDotNet.Views.MainWindow"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/icon.ico"
         Title="NoiseMachineDotNet">
         <views:MainView />
 </Window>

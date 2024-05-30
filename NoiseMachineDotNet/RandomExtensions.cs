@@ -84,8 +84,8 @@ namespace NoiseMachineDotNet
         /// <returns></returns>
         public static int[] Permutation(this Random rand, int n, int k)
         {
-            List<int> result = new();
-            SortedSet<int> sorted = new();
+            List<int> result = [];
+            SortedSet<int> sorted = [];
 
             for (int i = 0; i < k; i++)
             {
@@ -103,7 +103,7 @@ namespace NoiseMachineDotNet
                 _ = sorted.Add(r);
             }
 
-            return result.ToArray();
+            return [.. result];
         }
     }
 }

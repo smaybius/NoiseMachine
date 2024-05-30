@@ -12,13 +12,6 @@
     <Platforms>AnyCPU;x86</Platforms>
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Icon.png" />
-    <None Remove="lib\arm32\miniaudio.so" />
-    <None Remove="lib\arm64\miniaudio.so" />
-    <None Remove="lib\x64\miniaudio.so" />
-    <None Remove="lib\x86\miniaudio.so" />
-  </ItemGroup>
 
   <ItemGroup>
     <AndroidResource Include="Icon.png">

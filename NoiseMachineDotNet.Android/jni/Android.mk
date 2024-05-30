@@ -7,6 +7,6 @@ LOCAL_MODULE := miniaudio
 LOCAL_MODULE_FILENAME := miniaudio
 
 # list your C files to compile
-LOCAL_SRC_FILES := ../../NoiseMachineDotNet/extern/miniaudio.c
+LOCAL_SRC_FILES := ../../extern/miniaudio.c
 
 include $(BUILD_SHARED_LIBRARY)

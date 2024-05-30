@@ -7,8 +7,74 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platforms>AnyCPU;x86</Platforms>
+    <Platforms>AnyCPU;x86;ARM32;ARM64;x64</Platforms>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="libs\ARM32\miniaudio.obj" />
+    <None Remove="libs\x64\miniaudio.ilk" />
+    <None Remove="libs\x64\miniaudio.pdb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="libs\ARM32\miniaudio.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\ARM32\miniaudio.exp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\ARM32\miniaudio.lib">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\ARM32\miniaudio.obj" />
+    <EmbeddedResource Include="libs\ARM32\miniaudio_linux.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\ARM64\miniaudio.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\ARM64\miniaudio.exp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\ARM64\miniaudio.lib">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\ARM64\miniaudio.obj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\ARM64\miniaudio_linux.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x64\miniaudio.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x64\miniaudio.exp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x64\miniaudio.lib">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x64\miniaudio.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x64\miniaudio_linux.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x86\miniaudio.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x86\miniaudio.exp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x86\miniaudio.lib">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x86\miniaudio.obj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="libs\x86\miniaudio_linux.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
@@ -18,4 +84,46 @@
   <ItemGroup>
     <ProjectReference Include="..\NoiseMachineDotNet\NoiseMachineDotNet.csproj" />
   </ItemGroup>
+
+
+
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+		<!--BeforeTargets="PreBuildEvent"-->
+
+		<PropertyGroup Condition="$(Platform) != 'AnyCPU'">
+			<!--Set GCC to target a specific arch regardless of the host machine-->
+			<GccArch></GccArch>
+			<GccArch Condition="'$(Platform)'=='x86'">i686-linux-gnu-</GccArch>
+			<GccArch Condition="'$(Platform)'=='x64'">x86_64-linux-gnu-</GccArch>
+			<GccArch Condition="'$(Platform)'=='ARM32'">arm-linux-gnueabi-</GccArch>
+			<GccArch Condition="'$(Platform)'=='ARM64'">aarch64-linux-gnu-</GccArch>
+			<NewPlatform>$(Platform)</NewPlatform>
+		</PropertyGroup>
+
+		<PropertyGroup Condition="$(Platform) == 'AnyCPU'">
+			<!--Set GCC to target a specific arch based on the host machine-->
+			<GccArch></GccArch>
+			<GccArch Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='X86'">i686-linux-gnu-</GccArch>
+			<GccArch Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='X64'">x86_64-linux-gnu-</GccArch>
+			<GccArch Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='Arm'">arm-linux-gnueabi-</GccArch>
+			<GccArch Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='Arm64'">aarch64-linux-gnu-</GccArch>
+			<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='X86'">x86</NewPlatform>
+			<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='X64'">x64</NewPlatform>
+			<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='Arm'">ARM32</NewPlatform>
+			<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='Arm64'">ARM64</NewPlatform>
+		</PropertyGroup>
+		<PropertyGroup>
+			<VCPlat1>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)</VCPlat1>
+			<VCPlat1 Condition="$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture) == ARM32">ARM</VCPlat1>
+			<VCPlat2>$(NewPlatform)</VCPlat2>
+			<VCPlat2 Condition="$(NewPlatform) == ARM32">ARM</VCPlat2>
+			<VCPlat3 Condition="$(VCPlat1) != $(VCPlat2)">$(VCPlat1)_$(VCPlat2)</VCPlat3>
+			<VCPlat3 Condition="$(VCPlat1) == $(VCPlat2)">$(VCPlat2)</VCPlat3>
+			<VSEnv>call "$(DevEnvDir)..\..\VC\Auxiliary\Build\vcvarsall.bat" $(VCPlat3)</VSEnv>
+		</PropertyGroup>
+		<Message Text="Arch = $([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)" Importance="High" />
+		<Message Text="Target = $(Platform)" Importance="High" />
+		<Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))" Command="$(VSEnv) &amp; cd $(ProjectDir)&#xD;&#xA;cl /LDd ../extern/miniaudio.c /Z7 /DEBUG /INCREMENTAL:NO /Felibs/$(NewPlatform)/miniaudio.dll" />
+		<Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" Command="cd $(ProjectDir)&#xD;&#xA;$(GccArch)gcc -shared -o libs/$(NewPlatform)/miniaudio_linux.so ../extern/miniaudio.c -lpthread -lm -ldl" />
+	</Target>
 </Project>
