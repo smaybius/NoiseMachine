@@ -1,16 +1,8 @@
-﻿using Avalonia.Controls;
-using Avalonia.Interactivity;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using NoiseMachineDotNet.libs.bindings.Miniaudio;
-using Silk.NET.Vulkan;
 using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Reflection;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using YamlDotNet.Core.Tokens;
 
 namespace NoiseMachineDotNet.ViewModels;
 public partial class MainViewModel : ViewModelBase
@@ -22,7 +14,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
 
-    private static bool filterEnabled;
+    private bool filterEnabled;
 
     public unsafe bool FilterEnabled
     {
@@ -33,45 +25,59 @@ public partial class MainViewModel : ViewModelBase
             if (!Playing) return;
             if (value)
             {
-                Miniaudio.ma_node_set_output_bus_volume(filter, 0, (float)FilterGain / 100);
+                if (Miniaudio.ma_node_attach_output_bus(filter, 0, Miniaudio.ma_node_graph_get_endpoint(pNodeGraph), 0) != ma_result.MA_SUCCESS)
+                {
+                    StopSounds();
+                    throw new Exception("Why won't the filter work?");
+                }
+
+                if (Miniaudio.ma_node_attach_output_bus(&pNoise->node, 0, filter, 0) != ma_result.MA_SUCCESS)
+                {
+                    StopSounds();
+                    throw new Exception("White noise turned into silence? LOLWUT????");
+                }
             }
             else
             {
-                Miniaudio.ma_node_set_output_bus_volume(filter, 0, 0);
+                Miniaudio.ma_node_detach_all_output_buses(pNodeGraph);
+                if (Miniaudio.ma_node_attach_output_bus(&pNoise->node, 0, Miniaudio.ma_node_graph_get_endpoint(pNodeGraph), 0) != ma_result.MA_SUCCESS)
+                {
+                    StopSounds();
+                    throw new Exception("White noise turned into silence? LOLWUT????");
+                }
             }
         }
     }
 
     [ObservableProperty]
-    private static bool playing = false;
-    
-    private static double filterGain = 100;
+    private bool playing = false;
 
-    public unsafe double FilterGain
+
+    private double filterGain = 30;
+
+    public double FilterGain
     {
         get => filterGain;
         set
         {
             SetProperty(ref filterGain, value);
-            if (!FilterEnabled) return;
-            Miniaudio.ma_node_set_output_bus_volume(filter, 0, (float)value / 100);
-        }
-    }
-
-
-    private static double filterOrder = 1;
-
-    public double FilterOrder
-    {
-        get => filterOrder;
-        set
-        {
-            SetProperty(ref filterOrder, value);
             FilterChanged();
         }
     }
 
-    private static double filterCutoff = 200;
+    private double filterWidth = 100;
+
+    public double FilterWidth
+    {
+        get => filterWidth;
+        set
+        {
+            SetProperty(ref filterWidth, value);
+            FilterChanged();
+        }
+    }
+
+    private double filterCutoff = 200;
 
     public double FilterCutoff
     {
@@ -84,7 +90,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
 
-    private static double a0;
+    private double a0;
     public double A0
     {
         get => a0;
@@ -95,7 +101,7 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private static double a1;
+    private double a1;
     public double A1
     {
         get => a1;
@@ -106,7 +112,7 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private static double a2;
+    private double a2;
     public double A2
     {
         get => a2;
@@ -117,7 +123,7 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private static double b0;
+    private double b0;
     public double B0
     {
         get => b0;
@@ -128,7 +134,7 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private static double b1;
+    private double b1;
     public double B1
     {
         get => b1;
@@ -139,7 +145,7 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private static double b2;
+    private double b2;
     public double B2
     {
         get => b2;
@@ -150,7 +156,7 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private static double noiseVolume;
+    private double noiseVolume;
     public unsafe double NoiseVolume
     {
         get => noiseVolume;
@@ -169,11 +175,11 @@ public partial class MainViewModel : ViewModelBase
     }
     public string NoisePercentage => "Noise Volume: " + (100 * NoiseVolume).ToString() + "%";
     [ObservableProperty]
-    private static bool whiteNoiseChecked;
+    private bool whiteNoiseChecked;
     [ObservableProperty]
-    private static bool pinkNoiseChecked;
+    private bool pinkNoiseChecked;
     [ObservableProperty]
-    private static bool brownianNoiseChecked;
+    private bool brownianNoiseChecked;
 
     private static double toneVolume;
     public unsafe double ToneVolume
@@ -204,7 +210,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private static double toneFreq;
     [ObservableProperty]
-    private static string? buttonText;
+    private string? buttonText;
     private const int sampleRate = 44100;
     private const double frequency = 104;
 
@@ -357,17 +363,12 @@ public partial class MainViewModel : ViewModelBase
             throw new Exception("Filter failed to start. Wonder what happened?");
         }
 
-        if (Miniaudio.ma_node_attach_output_bus(filter, 0, Miniaudio.ma_node_graph_get_endpoint(pNodeGraph), 0) != ma_result.MA_SUCCESS)
-        {
-            StopSounds();
-            throw new Exception("Why won't the filter work?");
-        }
-
-        if (Miniaudio.ma_node_attach_output_bus(&pNoise->node, 0, filter, 0) != ma_result.MA_SUCCESS)
+        if (Miniaudio.ma_node_attach_output_bus(&pNoise->node, 0, Miniaudio.ma_node_graph_get_endpoint(pNodeGraph), 0) != ma_result.MA_SUCCESS)
         {
             StopSounds();
             throw new Exception("White noise turned into silence? LOLWUT????");
         }
+
         if (Miniaudio.ma_device_init(null, &NoiseDeviceConfig, pNoiseDevice) != ma_result.MA_SUCCESS)
         {
             StopSounds();
@@ -388,6 +389,7 @@ public partial class MainViewModel : ViewModelBase
     public unsafe void StopSounds()
     {
         Playing = false;
+        FilterEnabled = false;
         Miniaudio.ma_device_uninit(pToneDevice);
         NativeMemory.Free(pToneDevice);
 
@@ -423,9 +425,9 @@ public partial class MainViewModel : ViewModelBase
         Playing = false;
         NoiseVolume = 0.5f;
         WhiteNoiseChecked = true;
-        FilterCutoff = 200;
-        FilterGain = 100;
-        FilterOrder = 1;
+        FilterCutoff = 500;
+        FilterGain = 30;
+        FilterWidth = 100;
         ToneVolume = 1;
         BinauralChecked = true;
         ToneFreq = 2.5;
@@ -469,64 +471,56 @@ public partial class MainViewModel : ViewModelBase
     public void SetFilter(string filt)
     {
         FilterName = filt;
+        FilterChanged();
     }
 
     private static bool highLevel = false;
 
     public unsafe void FilterChanged()
     {
-        double omega = 2 * Math.PI * FilterCutoff / sampleRate;
-        double sn = Math.Sin(omega);
-        double cs = Math.Cos(omega);
-        double alpha = sn / (2 * FilterOrder);
+        double w, s, c, A, S, a, sqrtA;
         highLevel = true;
+        w = 2 * Math.PI * FilterCutoff / sampleRate;
+        s = Math.Sin(w);
+        c = Math.Cos(w);
+        A = Math.Pow(10, (FilterGain / 40));
+        S = FilterWidth/100;
+        a = s / 2 * Math.Sqrt((A + 1 / A) * (1 / S - 1) + 2);
+        sqrtA = 2 * Math.Sqrt(A) * a;
         switch (FilterName)
         {
             case "bpf":
-                B0 = alpha;
-                B1 = 0;
-                B2 = -alpha;
-                A0 = 1 + alpha;
-                A1 = -2 * cs;
-                A2 = 1 - alpha;
+                double q = filterWidth;
+                a = s / (2 * q);
+
+                B0 = 1 + (a * A);
+                B1 = -2 * c;
+                B2 = 1 - (a * A);
+                A0 = 1 + (a / A);
+                A1 = -2 * c;
+                A2 = 1 - (a / A);
                 break;
             case "lpf":
-                B0 = (1 - cs) / 2;
-                B1 = 1 - cs;
-                B2 = (1 - cs) / 2;
-                A0 = 1 + alpha;
-                A1 = -2 * cs;
-                A2 = 1 - alpha;
+                B0 = A * ((A + 1) - (A - 1) * c + sqrtA);
+                B1 = 2 * A * ((A - 1) - (A + 1) * c);
+                B2 = A * ((A + 1) - (A - 1) * c - sqrtA);
+                A0 = (A + 1) + (A - 1) * c + sqrtA;
+                A1 = -2 * ((A - 1) + (A + 1) * c);
+                A2 = (A + 1) + (A - 1) * c - sqrtA;
                 break;
             case "hpf":
-                B0 = (1 + cs) / 2;
-                B1 = -(1 + cs);
-                B2 = (1 + cs) / 2;
-                A0 = 1 + alpha;
-                A1 = -2 * cs;
-                A2 = 1 - alpha;
-                break;
-            case "notch":
-                B0 = 1;
-                B1 = -2 * cs;
-                B2 = 1;
-                A0 = 1 + alpha;
-                A1 = -2 * cs;
-                A2 = 1 - alpha;
-                break;
-            case "peak":
-                B0 = 1 + alpha;
-                B1 = -2 * cs;
-                B2 = 1 - alpha;
-                A0 = 1 + alpha;
-                A1 = -2 * cs;
-                A2 = 1 - alpha;
+                B0 = A * ((A + 1) + (A - 1) * c + sqrtA);
+                B1 = -2 * A * ((A - 1) + (A + 1) * c);
+                B2 = A * ((A + 1) + (A - 1) * c - sqrtA);
+                A0 = (A + 1) - (A - 1) * c + sqrtA;
+                A1 = 2 * ((A - 1) - (A + 1) * c);
+                A2 = (A + 1) - (A - 1) * c - sqrtA;
                 break;
         }
         highLevel = false;
         if (!Playing) return;
         ma_biquad_config config = Miniaudio.ma_biquad_config_init(ma_format.ma_format_f32, 2, B0, B1, B2, A0, A1, A2);
-        Debug.WriteLine(Miniaudio.ma_biquad_node_reinit(&config, filter));
+        Miniaudio.ma_biquad_node_reinit(&config, filter);
     }
 
     public unsafe void LowFilterChanged()
@@ -534,6 +528,6 @@ public partial class MainViewModel : ViewModelBase
         if (!Playing) return;
         if (highLevel) return;
         ma_biquad_config config = Miniaudio.ma_biquad_config_init(ma_format.ma_format_f32, 2, B0, B1, B2, A0, A1, A2);
-        Debug.WriteLine(Miniaudio.ma_biquad_node_reinit(&config, filter));
+        Miniaudio.ma_biquad_node_reinit(&config, filter);
     }
 }

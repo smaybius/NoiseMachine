@@ -38,6 +38,10 @@ class Program
         {
             libraryPath = "libs/" + subfolder + $"/{LibraryName}_linux.so";
         }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // Are we rich laymen?
+        {
+            libraryPath = "libs/" + subfolder + $"/{LibraryName}.dylib";
+        }
 
         NativeLibrary.SetDllImportResolver(typeof(MainViewModel).Assembly, (name, assembly, path) =>
         {

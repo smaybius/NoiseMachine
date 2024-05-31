@@ -31,24 +31,23 @@
 			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding FilterEnabled}">
 				<StackPanel>
 					<Label Content="Cutoff:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="0" Maximum="44100" Value="{Binding FilterCutoff}" Increment="100" Width="130"/>
+					<NumericUpDown Minimum="1" Maximum="44100" Value="{Binding FilterCutoff}" Increment="100" Width="130"/>
 				</StackPanel>
 				<StackPanel>
-					<Label Content="Resonance %:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="0" Maximum="100" Value="{Binding FilterOrder}" Increment="10" Width="130"/>
+					<Label Content="Width %:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="0.01" Maximum="100" Value="{Binding FilterWidth}" Increment="10" Width="130"/>
 				</StackPanel>
 				<StackPanel>
-					<Label Content="Amount %:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="0" Maximum="100" Value="{Binding FilterGain}" Increment="10" Width="130"/>
+					<Label Content="Gain:" HorizontalAlignment="Center"/>
+					<NumericUpDown Minimum="0" Maximum="100" Value="{Binding FilterGain}" Increment="5" Width="130"/>
 				</StackPanel>
 			</WrapPanel>
 			<Label Content="Filter Type:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
 			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding FilterEnabled}">
 				<RadioButton Command="{Binding SetFilter}" IsChecked="True" CommandParameter="lpf" GroupName="FilterTypes" Content="Low-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton Command="{Binding SetFilter}" CommandParameter="bpf" GroupName="FilterTypes" Content="Band-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton Command="{Binding SetFilter}" CommandParameter="hpf" GroupName="FilterTypes" Content="High-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
+				<RadioButton Command="{Binding SetFilter}" CommandParameter="bpf" GroupName="FilterTypes" Content="Band-Pass/Peak" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
 				<RadioButton Command="{Binding SetFilter}" CommandParameter="notch" GroupName="FilterTypes" Content="Notch" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
-				<RadioButton Command="{Binding SetFilter}" CommandParameter="peak" GroupName="FilterTypes" Content="Peaking EQ" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
+				<RadioButton Command="{Binding SetFilter}" CommandParameter="hpf" GroupName="FilterTypes" Content="High-Pass" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="20,0,0,0"/>
 			</WrapPanel>
 			<Label Content="Noise Presets:" HorizontalAlignment="Center" Margin="0,10,0,0"/>
 			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding FilterEnabled}">
@@ -62,27 +61,27 @@
 			<WrapPanel HorizontalAlignment="Center" IsEnabled="{Binding FilterEnabled}">
 				<StackPanel>
 					<Label Content="b0:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B0}" Increment="0.01" Width="130"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B0}" Increment="0.01" Width="220"/>
 				</StackPanel>
 				<StackPanel>
 					<Label Content="b1:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B1}" Increment="0.01" Width="130"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B1}" Increment="0.01" Width="230"/>
 				</StackPanel>
 				<StackPanel>
 					<Label Content="b2:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B2}" Increment="0.01" Width="130"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding B2}" Increment="0.01" Width="230"/>
 				</StackPanel>
 				<StackPanel>
 					<Label Content="a0:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="1" Maximum="10" Value="{Binding A0}" Increment="0.01" Width="130"/>
+					<NumericUpDown Minimum="1" Maximum="10" Value="{Binding A0}" Increment="0.01" Width="230"/>
 				</StackPanel>
 				<StackPanel>
 					<Label Content="a1:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding A1}" Increment="0.01" Width="130"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding A1}" Increment="0.01" Width="230"/>
 				</StackPanel>
 				<StackPanel>
 					<Label Content="a2:" HorizontalAlignment="Center"/>
-					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding A2}" Increment="0.01" Width="130"/>
+					<NumericUpDown Minimum="-10" Maximum="10" Value="{Binding A2}" Increment="0.01" Width="230"/>
 				</StackPanel>
 			</WrapPanel>
 			<Separator Margin="0,30,0,30"/>
