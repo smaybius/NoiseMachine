@@ -452,3 +452,7 @@ $RECYCLE.BIN/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+## Xcode
+NoiseMachineDotNet.Desktop/libs/temp/*
+NoiseMachineDotNet.Desktop/libs/XCBuildData/*

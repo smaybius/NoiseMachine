@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscode-dotnet-pack",
+        "avaloniateam.vscode-avalonia"
+    ]
+}

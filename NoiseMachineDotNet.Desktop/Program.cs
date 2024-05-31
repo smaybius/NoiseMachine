@@ -40,7 +40,7 @@ class Program
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // Are we rich laymen?
         {
-            libraryPath = "libs/" + subfolder + $"/{LibraryName}.dylib";
+            libraryPath = $"libs/{LibraryName}.dylib";
         }
 
         NativeLibrary.SetDllImportResolver(typeof(MainViewModel).Assembly, (name, assembly, path) =>

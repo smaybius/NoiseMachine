@@ -9,11 +9,6 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>AnyCPU;x86;ARM32;ARM64;x64</Platforms>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="libs\ARM32\miniaudio.obj" />
-    <None Remove="libs\x64\miniaudio.ilk" />
-    <None Remove="libs\x64\miniaudio.pdb" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="libs\ARM32\miniaudio.dll">
@@ -25,7 +20,6 @@
     <EmbeddedResource Include="libs\ARM32\miniaudio.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="libs\ARM32\miniaudio.obj" />
     <EmbeddedResource Include="libs\ARM32\miniaudio_linux.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -36,9 +30,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="libs\ARM64\miniaudio.lib">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="libs\ARM64\miniaudio.obj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="libs\ARM64\miniaudio_linux.so">
@@ -53,9 +44,6 @@
     <EmbeddedResource Include="libs\x64\miniaudio.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="libs\x64\miniaudio.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
     <EmbeddedResource Include="libs\x64\miniaudio_linux.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -68,10 +56,10 @@
     <EmbeddedResource Include="libs\x86\miniaudio.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="libs\x86\miniaudio.obj">
+    <EmbeddedResource Include="libs\x86\miniaudio_linux.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="libs\x86\miniaudio_linux.so">
+    <EmbeddedResource Include="libs\miniaudio.dylib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
@@ -125,5 +113,6 @@
 		<Message Text="Target = $(Platform)" Importance="High" />
 		<Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))" Command="$(VSEnv) &amp; cd $(ProjectDir)&#xD;&#xA;cl /LDd ../extern/miniaudio.c /Z7 /DEBUG /INCREMENTAL:NO /Felibs/$(NewPlatform)/miniaudio.dll" />
 		<Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" Command="cd $(ProjectDir)&#xD;&#xA;$(GccArch)gcc -shared -o libs/$(NewPlatform)/miniaudio_linux.so ../extern/miniaudio.c -lpthread -lm -ldl" />
-	</Target>
+		<Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'" Command="cd $(ProjectDir)&#xD;&#xA;clang -dynamiclib ../extern/miniaudio.c -o libs/miniaudio.dylib" />
+  </Target>
 </Project>
