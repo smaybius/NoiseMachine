@@ -20,4 +20,8 @@
   <ItemGroup>
     <ProjectReference Include="..\NoiseMachineDotNet\NoiseMachineDotNet.csproj" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  <Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'" Command="cd $(ProjectDir)&#xD;&#xA;clang -x objective-c -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -framework CoreFoundation -framework CoreAudio -framework AudioToolbox -o miniaudio ../extern/miniaudio.c -lpthread -lm -lobjc" />
+  </Target>
 </Project>

@@ -113,6 +113,6 @@
 		<Message Text="Target = $(Platform)" Importance="High" />
 		<Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))" Command="$(VSEnv) &amp; cd $(ProjectDir)&#xD;&#xA;cl /LDd ../extern/miniaudio.c /Z7 /DEBUG /INCREMENTAL:NO /Felibs/$(NewPlatform)/miniaudio.dll" />
 		<Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" Command="cd $(ProjectDir)&#xD;&#xA;$(GccArch)gcc -shared -o libs/$(NewPlatform)/miniaudio_linux.so ../extern/miniaudio.c -lpthread -lm -ldl" />
-		<Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'" Command="cd $(ProjectDir)&#xD;&#xA;clang -dynamiclib ../extern/miniaudio.c -o libs/miniaudio.dylib" />
+		<Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'" Command="cd $(ProjectDir)&#xD;&#xA;clang -dynamiclib -o libs/miniaudio.dylib ../extern/miniaudio.c -framework CoreFoundation -framework CoreAudio -framework AudioToolbox" />
   </Target>
 </Project>
