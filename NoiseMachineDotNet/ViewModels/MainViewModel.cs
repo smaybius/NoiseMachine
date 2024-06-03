@@ -7,13 +7,6 @@ using System.Runtime.InteropServices;
 namespace NoiseMachineDotNet.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
-    
-    public MainViewModel()
-    {
-        Init();
-    }
-
-
     private bool filterEnabled;
 
     public unsafe bool FilterEnabled
@@ -290,17 +283,86 @@ public partial class MainViewModel : ViewModelBase
         public ma_data_source_node node;
         public ma_noise noise;
     }
-
-    ~MainViewModel()
+    public MainViewModel()
+    {
+        Init();
+    }
+    unsafe ~MainViewModel()
     {
         StopSounds();
+        Miniaudio.ma_device_uninit(pToneDevice);
+        Miniaudio.ma_node_detach_all_output_buses(pNodeGraph);
+        Miniaudio.ma_device_uninit(pNoiseDevice);
+        Miniaudio.ma_node_uninit(pNodeGraph, null);
+        Miniaudio.ma_noise_uninit(&pNoise->noise, null);
+        Miniaudio.ma_biquad_node_uninit(filter, null);
+        NativeMemory.Free(pNodeGraph);
+        NativeMemory.Free(pNoiseDevice);
+        NativeMemory.Free(pNoise);
+        NativeMemory.Free(filter);
+        NativeMemory.Free(pToneDevice);
     }
 
     public unsafe void StartSounds()
     {
+
+        if (Miniaudio.ma_device_start(pToneDevice) != ma_result.MA_SUCCESS)
+        {
+            throw new Exception("The future is now thanks to science! Clemontic gear on! O NOES!!! PLAYBACC DEVICE ABOUT 2 AXPLODE!!!!");
+        }
+
+        if (Miniaudio.ma_device_start(pNoiseDevice) != ma_result.MA_SUCCESS)
+        {
+            StopSounds();
+            throw new Exception("Ain't science so amazing, that Clemont's playback device invention ain't startin'?\n");
+        }
+
+        Miniaudio.ma_device_set_master_volume(pNoiseDevice, (float)NoiseVolume);
+
+        Playing = true;
+    }
+    public unsafe void StopSounds()
+    {
+        Playing = false;
+        FilterEnabled = false;
+        Miniaudio.ma_device_stop(pToneDevice);
+        Miniaudio.ma_device_stop(pNoiseDevice);
+    }
+    public void StartStopSounds()
+    {
+
+        if (ButtonText == "Start")
+        {
+            StartSounds();
+            ButtonText = "Stop";
+        }
+        else
+        {
+            StopSounds();
+            ButtonText = "Start";
+        }
+
+    }
+
+
+    public unsafe void Init()
+    {
+        Playing = false;
+        NoiseVolume = 0.5f;
+        WhiteNoiseChecked = true;
+        FilterCutoff = 500;
+        FilterGain = 30;
+        FilterWidth = 100;
+        ToneVolume = 1;
+        BinauralChecked = true;
+        ToneFreq = 2.5;
+        ButtonText = "Start";
+        FilterName = "lpf";
+        FilterEnabled = false;
+        FilterChanged();
+
         #region Tone
         pToneDevice = (ma_device*)NativeMemory.Alloc((nuint)sizeof(ma_device));
-
 
         ma_device_config toneDeviceConfig = Miniaudio.ma_device_config_init(ma_device_type.ma_device_type_playback);
         toneDeviceConfig.playback.format = ma_format.ma_format_f32;
@@ -313,13 +375,9 @@ public partial class MainViewModel : ViewModelBase
             throw new Exception("Your playback device gives Clark Griswold's Christmas lights a run for its money!");
         }
 
-        if (Miniaudio.ma_device_start(pToneDevice) != ma_result.MA_SUCCESS)
-        {
-            throw new Exception("The future is now thanks to science! Clemontic gear on! O NOES!!! PLAYBACC DEVICE ABOUT 2 AXPLODE!!!!");
-        }
-
         #endregion
-        #region Noise
+
+        #region noise
 
         pNodeGraph = (ma_node_graph*)NativeMemory.Alloc((nuint)sizeof(ma_node_graph));
         ma_node_graph_config nodeConfig = Miniaudio.ma_node_graph_config_init(2);
@@ -329,7 +387,7 @@ public partial class MainViewModel : ViewModelBase
             throw new Exception("Graphs, graphs, needs more graphs! Ain't no graphs in here! This is completely worthless!");
         }
 
-        
+
         pNoiseDevice = (ma_device*)NativeMemory.Alloc((nuint)sizeof(ma_device));
         pNoise = (ma_noise_node*)NativeMemory.Alloc((nuint)sizeof(ma_noise_node));
 
@@ -374,67 +432,7 @@ public partial class MainViewModel : ViewModelBase
             StopSounds();
             throw new Exception("Did your playback device come from Bigmotor or smth? Kinda sus ngl\n");
         }
-
-        if (Miniaudio.ma_device_start(pNoiseDevice) != ma_result.MA_SUCCESS)
-        {
-            StopSounds();
-            throw new Exception("Ain't science so amazing, that Clemont's playback device invention ain't startin'?\n");
-        }
-
-        Miniaudio.ma_device_set_master_volume(pNoiseDevice, (float)NoiseVolume);
-
         #endregion
-        Playing = true;
-    }
-    public unsafe void StopSounds()
-    {
-        Playing = false;
-        FilterEnabled = false;
-        Miniaudio.ma_device_uninit(pToneDevice);
-        NativeMemory.Free(pToneDevice);
-
-        Miniaudio.ma_node_detach_all_output_buses(pNodeGraph);
-        Miniaudio.ma_device_uninit(pNoiseDevice);
-        Miniaudio.ma_node_uninit(pNodeGraph, null);
-        Miniaudio.ma_noise_uninit(&pNoise->noise, null);
-        Miniaudio.ma_biquad_node_uninit(filter, null);
-        NativeMemory.Free(pNodeGraph);
-        NativeMemory.Free(pNoiseDevice);
-        NativeMemory.Free(pNoise);
-        NativeMemory.Free(filter);
-    }
-    public void StartStopSounds()
-    {
-
-        if (ButtonText == "Start")
-        {
-            StartSounds();
-            ButtonText = "Stop";
-        }
-        else
-        {
-            StopSounds();
-            ButtonText = "Start";
-        }
-
-    }
-
-
-    public void Init()
-    {
-        Playing = false;
-        NoiseVolume = 0.5f;
-        WhiteNoiseChecked = true;
-        FilterCutoff = 500;
-        FilterGain = 30;
-        FilterWidth = 100;
-        ToneVolume = 1;
-        BinauralChecked = true;
-        ToneFreq = 2.5;
-        ButtonText = "Start";
-        FilterName = "lpf";
-        FilterEnabled = false;
-        FilterChanged();
     }
     public void SetToneFreq(double val)
     {

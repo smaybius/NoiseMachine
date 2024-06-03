@@ -10,6 +10,13 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AndroidLinkTool>r8</AndroidLinkTool>
+    <EnableLLVM>True</EnableLLVM>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <EnableLLVM>True</EnableLLVM>
+  </PropertyGroup>
 
   <ItemGroup>
     <AndroidResource Include="Icon.png">
@@ -18,8 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.1" />
+    <PackageReference Include="Avalonia.Android" Version="11.0.10" />
+    <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.7" />
   </ItemGroup>
 
   <ItemGroup>

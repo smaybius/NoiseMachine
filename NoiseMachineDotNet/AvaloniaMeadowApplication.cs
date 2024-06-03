@@ -79,5 +79,10 @@ namespace NoiseMachineDotNet
             }
             .Start();
         }
+
+        public void OnBootFromCrash(IEnumerable<string> crashReports)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

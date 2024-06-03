@@ -5,6 +5,7 @@ include $(CLEAR_VARS)
 # give module name
 LOCAL_MODULE := miniaudio
 LOCAL_MODULE_FILENAME := miniaudio
+LOCAL_LDLIBS := -llog
 
 # list your C files to compile
 LOCAL_SRC_FILES := ../../extern/miniaudio.c

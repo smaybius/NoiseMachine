@@ -13,6 +13,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoiseMachineDotNet.iOS", ".
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoiseMachineDotNet.Browser", "..\NoiseMachineDotNet.Browser\NoiseMachineDotNet.Browser.csproj", "{3F0920A7-26DE-4414-9DC7-4D0B3C8B2F79}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A3B8A7AD-C492-4ACB-B10D-5E941872C0FB}"
+	ProjectSection(SolutionItems) = preProject
+		..\extern\miniaudio.c = ..\extern\miniaudio.c
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +31,7 @@ Global
 		{6D5F9EF0-D683-4770-82FB-B9EA026A3824}.Release|Any CPU.Build.0 = Release|Any CPU
 		{538C65B6-E50D-40BF-B969-7A2E85B6D836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{538C65B6-E50D-40BF-B969-7A2E85B6D836}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{538C65B6-E50D-40BF-B969-7A2E85B6D836}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{538C65B6-E50D-40BF-B969-7A2E85B6D836}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{538C65B6-E50D-40BF-B969-7A2E85B6D836}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3F9AEDF2-AA38-4A5D-8F2F-FC027B585BD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -33,6 +40,7 @@ Global
 		{3F9AEDF2-AA38-4A5D-8F2F-FC027B585BD2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B4319F01-0310-4764-842B-FBE557E8F3B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B4319F01-0310-4764-842B-FBE557E8F3B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4319F01-0310-4764-842B-FBE557E8F3B5}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{B4319F01-0310-4764-842B-FBE557E8F3B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4319F01-0310-4764-842B-FBE557E8F3B5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3F0920A7-26DE-4414-9DC7-4D0B3C8B2F79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

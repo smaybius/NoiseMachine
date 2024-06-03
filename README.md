@@ -29,7 +29,7 @@ Built for .NET 8 or higher.
 ## Platforms
 
 - Windows (only tested on x86_64)
-- Android (only tested on x86_64)
+- Android
 - macOS (only tested on Apple Silicon)
 - Windows on ARM (untested)
 - Web (problematic build)
@@ -46,6 +46,7 @@ Built for .NET 8 or higher.
 - Clang/LLVM, including llvm-dev on Linux
 - Xcode (when on macOS)
 - Missing tools can be gotten with the `dotnet workload restore` command when done on the directory with the .sln file.
+- When on Ubuntu, run `sudo apt install libx11-6 libice6 libsm6 libfontconfig1`
 
 
 ## Building Miniaudio
