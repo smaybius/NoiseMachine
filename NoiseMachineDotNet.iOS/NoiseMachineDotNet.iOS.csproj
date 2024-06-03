@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-ios16.1</TargetFramework>
+    <TargetFramework>net8.0-ios</TargetFramework>
     <SupportedOSPlatformVersion>15.7.9</SupportedOSPlatformVersion>
     <ProvisioningType>manual</ProvisioningType>
     <Nullable>enable</Nullable>
-    <RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
+    <RuntimeIdentifier>iossimulator-arm64</RuntimeIdentifier>
     <Platforms>AnyCPU;x86</Platforms>
     
     <!-- These properties need to be set in order to run on a real iDevice -->
@@ -13,15 +13,30 @@
     <!--<CodesignKey></CodesignKey>-->
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <CreatePackage>false</CreatePackage>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <CreatePackage>false</CreatePackage>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <CreatePackage>false</CreatePackage>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <CreatePackage>false</CreatePackage>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.iOS" Version="11.0.10" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\NoiseMachineDotNet\NoiseMachineDotNet.csproj" />
+    <EmbeddedResource Include="miniaudio">
+    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </EmbeddedResource>
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-  <Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'" Command="cd $(ProjectDir)&#xD;&#xA;clang -x objective-c -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -framework CoreFoundation -framework CoreAudio -framework AudioToolbox -o miniaudio ../extern/miniaudio.c -lpthread -lm -lobjc" />
+  <Target Name="Nothing">
+  <Exec Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'" Command="cd $(ProjectDir)&#xD;&#xA;clang -x objective-c -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -framework CoreFoundation -framework CoreAudio -framework AudioToolbox -framework Foundation -framework CoreData -framework AVFoundation -fobjc-arc -o miniaudio ../extern/miniaudio.c -lpthread -lm -shared" />
   </Target>
 </Project>
