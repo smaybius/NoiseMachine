@@ -5,8 +5,6 @@
     <LangVersion>latest</LangVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
-    <Platforms>AnyCPU;x86;ARM32;ARM64;x64</Platforms>
   </PropertyGroup>
 
   
@@ -14,58 +12,43 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
-  
   <ItemGroup>
-    <Content Include="Assets\icon.ico" />
-  </ItemGroup>
-	
-
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.10" />
-    <PackageReference Include="Avalonia.FreeDesktop" Version="11.0.10" />
-    <PackageReference Include="Avalonia.Skia" Version="11.0.10" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.10" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
 
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10" />
-    <PackageReference Include="KristofferStrube.Blazor.DOM" Version="0.2.2" />
-    <PackageReference Include="KristofferStrube.Blazor.MediaCaptureStreams" Version="0.2.0" />
-    <PackageReference Include="KristofferStrube.Blazor.WebIDL" Version="0.5.0" />
-    <PackageReference Include="Meadow.Foundation" Version="1.11.0" />
-    <PackageReference Include="Meadow.Linux" Version="1.11.0" />
-    <PackageReference Include="Meadow.Windows" Version="1.11.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.5" />
-    <PackageReference Include="Microsoft.JSInterop" Version="8.0.5" />
-    <PackageReference Include="Microsoft.JSInterop.WebAssembly" Version="8.0.5" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Meadow.Foundation" Version="1.2" />
+    <PackageReference Include="Meadow.Linux" Version="1.2" />
+    <PackageReference Include="Meadow.Windows" Version="1.2" />
   </ItemGroup>
-	
+
 
   <ItemGroup>
     <Folder Include="libs\bindings\" />
   </ItemGroup>
 
 <Target Name="InstallPInvoke">
-	<Exec Command="dotnet tool install --global ClangSharpPInvokeGenerator" />
+        <Exec Command="dotnet tool install --global ClangSharpPInvokeGenerator" />
 </Target>
 
 <Target Name="Nothing" > <!--BeforeTargets="PreBuildEvent"-->
 
-	<RemoveDir Directories="\libs\bindings\Miniaudio\" />
-	<PropertyGroup>
-		<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='X86'">x86</NewPlatform>
-		<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='X64'">x64</NewPlatform>
-		<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='Arm'">ARM32</NewPlatform>
-		<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='Arm64'">ARM64</NewPlatform>
-		<VSEnv>call "$(DevEnvDir)..\..\VC\Auxiliary\Build\vcvarsall.bat" $(NewPlatform)</VSEnv>
-	</PropertyGroup>
+		<RemoveDir Directories="\libs\bindings\Miniaudio\" />
+		<PropertyGroup>
+			<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='X86'">x86</NewPlatform>
+			<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='X64'">x64</NewPlatform>
+			<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='Arm'">ARM32</NewPlatform>
+			<NewPlatform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)'=='Arm64'">ARM64</NewPlatform>
+			<VSEnv>call "$(DevEnvDir)..\..\VC\Auxiliary\Build\vcvarsall.bat" $(NewPlatform)</VSEnv>
+		</PropertyGroup>
 
-	<Exec Command="cd $(ProjectDir)&#xD;&#xA;git submodule update --init --recursive" />
-	<Exec ContinueOnError="WarnAndContinue" Condition="$([MSBuild]::IsOSPlatform('Windows'))" Command="$(VSEnv) &amp; ClangSharpPInvokeGenerator -n MiniAudioSharp -f ../extern/miniaudio/miniaudio.h -o ../NoiseMachineDotNet/libs/bindings/Miniaudio --include-directory $(VCINSTALLDIR)\Tools\Llvm\lib\clang\17\include\ --libraryPath miniaudio --config multi-file --config generate-helper-types -m Miniaudio" />
-	<Exec ContinueOnError="WarnAndContinue" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" Command="ClangSharpPInvokeGenerator -n MiniAudioSharp -f ../extern/miniaudio/miniaudio.h -o ../NoiseMachineDotNet/libs/bindings/Miniaudio/ --include-directory /usr/lib/clang/$(ls /usr/lib/clang | grep -E '^[0-9]+$' | sort -n | tail -1)/include/ --libraryPath miniaudio --config multi-file --config generate-helper-types -m Miniaudio" />
-	<OnError ExecuteTargets="InstallPInvoke" />
+		<Exec Command="cd $(ProjectDir)&#xD;&#xA;git submodule update --init --recursive" />
+		<Exec ContinueOnError="WarnAndContinue" Condition="$([MSBuild]::IsOSPlatform('Windows'))" Command="$(VSEnv) &amp; ClangSharpPInvokeGenerator -n MiniAudioSharp -f ../extern/miniaudio/miniaudio.h -o ../NoiseMachineDotNet/libs/bindings/Miniaudio --include-directory $(VCINSTALLDIR)\Tools\Llvm\lib\clang\17\include\ --libraryPath miniaudio --config multi-file --config generate-helper-types -m Miniaudio" />
+		<Exec ContinueOnError="WarnAndContinue" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" Command="ClangSharpPInvokeGenerator -n MiniAudioSharp -f ../extern/miniaudio/miniaudio.h -o ../NoiseMachineDotNet/libs/bindings/Miniaudio/ --include-directory /usr/lib/clang/$(ls /usr/lib/clang | grep -E '^[0-9]+$' | sort -n | tail -1)/include/ --libraryPath miniaudio --config multi-file --config generate-helper-types -m Miniaudio" />
+		<OnError ExecuteTargets="InstallPInvoke" />
 </Target>
 	
 </Project>

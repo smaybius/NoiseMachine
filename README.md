@@ -25,7 +25,6 @@ Built for .NET 8 or higher.
 - [mackron/miniaudio](https://github.com/mackron/miniaudio) is under the public domain or MIT no-attribution license.
 -- Bindings to Miniaudio are generated using ClangSharp which is under the MIT license.
 - AvaloniaUI is under the MIT license.
-- Random extensions are from <https://bitbucket.org/Superbest/superbest-random> which is under an unknown license.
 
 ## Platforms
 

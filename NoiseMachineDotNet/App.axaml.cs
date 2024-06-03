@@ -1,14 +1,19 @@
-﻿using Avalonia.Controls.ApplicationLifetimes;
+﻿using System.Threading.Tasks;
+
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+
 using Meadow;
+using Meadow.Pinouts;
+
 using NoiseMachineDotNet.ViewModels;
 using NoiseMachineDotNet.Views;
-using System.Threading.Tasks;
 
 namespace NoiseMachineDotNet;
 
-public partial class App : AvaloniaMeadowApplication<Linux>
+public partial class App : AvaloniaMeadowApplication<Linux<RaspberryPi>>
 {
 
     public override void Initialize()
@@ -19,7 +24,7 @@ public partial class App : AvaloniaMeadowApplication<Linux>
 
     public override Task InitializeMeadow()
     {
-        IMeadowDevice? r = Resolver.Services.Get<IMeadowDevice>();
+        var r = Resolver.Services.Get<IMeadowDevice>();
 
         if (r == null)
         {

@@ -1,10 +1,12 @@
-﻿using Avalonia;
-using Avalonia.Threading;
-using Meadow;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Avalonia;
+using Avalonia.Threading;
+
+using Meadow;
 
 namespace NoiseMachineDotNet
 {
@@ -31,27 +33,27 @@ namespace NoiseMachineDotNet
             Dispatcher.UIThread.Post(() => action(state));
         }
 
-        public virtual Task OnError(Exception e)
+        virtual public Task OnError(Exception e)
         {
             return Task.CompletedTask;
         }
 
-        public virtual Task OnShutdown()
+        virtual public Task OnShutdown()
         {
             return Task.CompletedTask;
         }
 
-        public virtual void OnUpdate(Version newVersion, out bool approveUpdate)
+        virtual public void OnUpdate(Version newVersion, out bool approveUpdate)
         {
             approveUpdate = true;
         }
 
-        public virtual void OnUpdateComplete(Version oldVersion, out bool rollbackUpdate)
+        virtual public void OnUpdateComplete(Version oldVersion, out bool rollbackUpdate)
         {
             rollbackUpdate = false;
         }
 
-        public virtual Task Run()
+        virtual public Task Run()
         {
             return Task.CompletedTask;
         }
@@ -76,11 +78,6 @@ namespace NoiseMachineDotNet
                 IsBackground = true
             }
             .Start();
-        }
-
-        public void OnBootFromCrash(IEnumerable<string> crashReports)
-        {
-            throw new NotImplementedException();
         }
     }
 }
