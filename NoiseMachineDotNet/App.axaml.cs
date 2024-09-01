@@ -1,65 +1,36 @@
-﻿using System.Threading.Tasks;
-
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-
-using Meadow;
-using Meadow.Pinouts;
-
 using NoiseMachineDotNet.ViewModels;
 using NoiseMachineDotNet.Views;
 
-namespace NoiseMachineDotNet;
-
-public partial class App : AvaloniaMeadowApplication<Linux>
+namespace NoiseMachineDotNet
 {
-
-    public override void Initialize()
+    public partial class App : Application
     {
-        AvaloniaXamlLoader.Load(this);
-        LoadMeadowOS();
-    }
-
-    public override Task InitializeMeadow()
-    {
-        var r = Resolver.Services.Get<IMeadowDevice>();
-
-        if (r == null)
+        public override void Initialize()
         {
-            Resolver.Log.Info("IMeadowDevice is null");
-        }
-        else
-        {
-            Resolver.Log.Info($"IMeadowDevice is {r.GetType().Name}");
+            AvaloniaXamlLoader.Load(this);
         }
 
-        return Task.CompletedTask;
-
-    }
-
-    public override void OnFrameworkInitializationCompleted()
-    {
-        // Line below is needed to remove Avalonia data validation.
-        // Without this line you will get duplicate validations from both Avalonia and CT
-        BindingPlugins.DataValidators.RemoveAt(0);
-
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        public override void OnFrameworkInitializationCompleted()
         {
-            desktop.MainWindow = new MainWindow
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                DataContext = new MainViewModel()
-            };
-        }
-        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
-        {
-            singleViewPlatform.MainView = new MainView
+                desktop.MainWindow = new MainWindow
+                {
+                    DataContext = new MainViewModel()
+                };
+            }
+            else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
-                DataContext = new MainViewModel()
-            };
-        }
+                singleViewPlatform.MainView = new MainView
+                {
+                    DataContext = new MainViewModel()
+                };
+            }
 
-        base.OnFrameworkInitializationCompleted();
+            base.OnFrameworkInitializationCompleted();
+        }
     }
 }

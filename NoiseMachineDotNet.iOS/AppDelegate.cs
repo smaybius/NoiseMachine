@@ -1,19 +1,20 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.iOS;
-
 using Foundation;
 
-namespace NoiseMachineDotNet.iOS;
-
-// The UIApplicationDelegate for the application. This class is responsible for launching the 
-// User Interface of the application, as well as listening (and optionally responding) to 
-// application events from iOS.
-[Register("AppDelegate")]
-public partial class AppDelegate : AvaloniaAppDelegate<App>
+namespace NoiseMachineDotNet.iOS
 {
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    // The UIApplicationDelegate for the application. This class is responsible for launching the 
+    // User Interface of the application, as well as listening (and optionally responding) to 
+    // application events from iOS.
+    [Register("AppDelegate")]
+    public partial class AppDelegate : AvaloniaAppDelegate<App>
     {
-        return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
+        protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+        {
+            return base.CustomizeAppBuilder(builder)
+                .WithInterFont()
+                .UseReactiveUI();
+        }
     }
 }

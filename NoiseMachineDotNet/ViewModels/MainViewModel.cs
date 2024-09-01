@@ -14,8 +14,12 @@ public partial class MainViewModel : ViewModelBase
         get => filterEnabled;
         set
         {
-            SetProperty(ref filterEnabled, value);
-            if (!Playing) return;
+            _ = SetProperty(ref filterEnabled, value);
+            if (!Playing)
+            {
+                return;
+            }
+
             if (value)
             {
                 if (Miniaudio.ma_node_attach_output_bus(filter, 0, Miniaudio.ma_node_graph_get_endpoint(pNodeGraph), 0) != ma_result.MA_SUCCESS)
@@ -32,7 +36,7 @@ public partial class MainViewModel : ViewModelBase
             }
             else
             {
-                Miniaudio.ma_node_detach_all_output_buses(pNodeGraph);
+                _ = Miniaudio.ma_node_detach_all_output_buses(pNodeGraph);
                 if (Miniaudio.ma_node_attach_output_bus(&pNoise->node, 0, Miniaudio.ma_node_graph_get_endpoint(pNodeGraph), 0) != ma_result.MA_SUCCESS)
                 {
                     StopSounds();
@@ -53,7 +57,7 @@ public partial class MainViewModel : ViewModelBase
         get => filterGain;
         set
         {
-            SetProperty(ref filterGain, value);
+            _ = SetProperty(ref filterGain, value);
             FilterChanged();
         }
     }
@@ -65,7 +69,7 @@ public partial class MainViewModel : ViewModelBase
         get => filterWidth;
         set
         {
-            SetProperty(ref filterWidth, value);
+            _ = SetProperty(ref filterWidth, value);
             FilterChanged();
         }
     }
@@ -77,7 +81,7 @@ public partial class MainViewModel : ViewModelBase
         get => filterCutoff;
         set
         {
-            SetProperty(ref filterCutoff, value);
+            _ = SetProperty(ref filterCutoff, value);
             FilterChanged();
         }
     }
@@ -89,7 +93,7 @@ public partial class MainViewModel : ViewModelBase
         get => a0;
         set
         {
-            SetProperty(ref a0, value);
+            _ = SetProperty(ref a0, value);
             LowFilterChanged();
         }
     }
@@ -100,7 +104,7 @@ public partial class MainViewModel : ViewModelBase
         get => a1;
         set
         {
-            SetProperty(ref a1, value);
+            _ = SetProperty(ref a1, value);
             LowFilterChanged();
         }
     }
@@ -111,7 +115,7 @@ public partial class MainViewModel : ViewModelBase
         get => a2;
         set
         {
-            SetProperty(ref a2, value);
+            _ = SetProperty(ref a2, value);
             LowFilterChanged();
         }
     }
@@ -122,7 +126,7 @@ public partial class MainViewModel : ViewModelBase
         get => b0;
         set
         {
-            SetProperty(ref b0, value);
+            _ = SetProperty(ref b0, value);
             LowFilterChanged();
         }
     }
@@ -133,7 +137,7 @@ public partial class MainViewModel : ViewModelBase
         get => b1;
         set
         {
-            SetProperty(ref b1, value);
+            _ = SetProperty(ref b1, value);
             LowFilterChanged();
         }
     }
@@ -144,7 +148,7 @@ public partial class MainViewModel : ViewModelBase
         get => b2;
         set
         {
-            SetProperty(ref b2, value);
+            _ = SetProperty(ref b2, value);
             LowFilterChanged();
         }
     }
@@ -264,7 +268,7 @@ public partial class MainViewModel : ViewModelBase
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static unsafe void NoiseCallback(ma_device* pDevice, void* pOutput, void* pInput, uint frameCount)
     {
-        Miniaudio.ma_node_graph_read_pcm_frames(pNodeGraph, pOutput, frameCount, null);
+        _ = Miniaudio.ma_node_graph_read_pcm_frames(pNodeGraph, pOutput, frameCount, null);
     }
 
     private static unsafe ma_biquad_node* filter;
@@ -291,7 +295,7 @@ public partial class MainViewModel : ViewModelBase
     {
         StopSounds();
         Miniaudio.ma_device_uninit(pToneDevice);
-        Miniaudio.ma_node_detach_all_output_buses(pNodeGraph);
+        _ = Miniaudio.ma_node_detach_all_output_buses(pNodeGraph);
         Miniaudio.ma_device_uninit(pNoiseDevice);
         Miniaudio.ma_node_uninit(pNodeGraph, null);
         Miniaudio.ma_noise_uninit(&pNoise->noise, null);
@@ -317,7 +321,7 @@ public partial class MainViewModel : ViewModelBase
             throw new Exception("Ain't science so amazing, that Clemont's playback device invention ain't startin'?\n");
         }
 
-        Miniaudio.ma_device_set_master_volume(pNoiseDevice, (float)NoiseVolume);
+        _ = Miniaudio.ma_device_set_master_volume(pNoiseDevice, (float)NoiseVolume);
 
         Playing = true;
     }
@@ -325,8 +329,8 @@ public partial class MainViewModel : ViewModelBase
     {
         Playing = false;
         FilterEnabled = false;
-        Miniaudio.ma_device_stop(pToneDevice);
-        Miniaudio.ma_device_stop(pNoiseDevice);
+        _ = Miniaudio.ma_device_stop(pToneDevice);
+        _ = Miniaudio.ma_device_stop(pNoiseDevice);
     }
     public void StartStopSounds()
     {
@@ -481,9 +485,9 @@ public partial class MainViewModel : ViewModelBase
         w = 2 * Math.PI * FilterCutoff / sampleRate;
         s = Math.Sin(w);
         c = Math.Cos(w);
-        A = Math.Pow(10, (FilterGain / 40));
-        S = FilterWidth/100;
-        a = s / 2 * Math.Sqrt((A + 1 / A) * (1 / S - 1) + 2);
+        A = Math.Pow(10, FilterGain / 40);
+        S = FilterWidth / 100;
+        a = s / 2 * Math.Sqrt(((A + (1 / A)) * ((1 / S) - 1)) + 2);
         sqrtA = 2 * Math.Sqrt(A) * a;
         switch (FilterName)
         {
@@ -499,33 +503,45 @@ public partial class MainViewModel : ViewModelBase
                 A2 = 1 - (a / A);
                 break;
             case "lpf":
-                B0 = A * ((A + 1) - (A - 1) * c + sqrtA);
-                B1 = 2 * A * ((A - 1) - (A + 1) * c);
-                B2 = A * ((A + 1) - (A - 1) * c - sqrtA);
-                A0 = (A + 1) + (A - 1) * c + sqrtA;
-                A1 = -2 * ((A - 1) + (A + 1) * c);
-                A2 = (A + 1) + (A - 1) * c - sqrtA;
+                B0 = A * (A + 1 - ((A - 1) * c) + sqrtA);
+                B1 = 2 * A * (A - 1 - ((A + 1) * c));
+                B2 = A * (A + 1 - ((A - 1) * c) - sqrtA);
+                A0 = A + 1 + ((A - 1) * c) + sqrtA;
+                A1 = -2 * (A - 1 + ((A + 1) * c));
+                A2 = A + 1 + ((A - 1) * c) - sqrtA;
                 break;
             case "hpf":
-                B0 = A * ((A + 1) + (A - 1) * c + sqrtA);
-                B1 = -2 * A * ((A - 1) + (A + 1) * c);
-                B2 = A * ((A + 1) + (A - 1) * c - sqrtA);
-                A0 = (A + 1) - (A - 1) * c + sqrtA;
-                A1 = 2 * ((A - 1) - (A + 1) * c);
-                A2 = (A + 1) - (A - 1) * c - sqrtA;
+                B0 = A * (A + 1 + ((A - 1) * c) + sqrtA);
+                B1 = -2 * A * (A - 1 + ((A + 1) * c));
+                B2 = A * (A + 1 + ((A - 1) * c) - sqrtA);
+                A0 = A + 1 - ((A - 1) * c) + sqrtA;
+                A1 = 2 * (A - 1 - ((A + 1) * c));
+                A2 = A + 1 - ((A - 1) * c) - sqrtA;
                 break;
         }
         highLevel = false;
-        if (!Playing) return;
+        if (!Playing)
+        {
+            return;
+        }
+
         ma_biquad_config config = Miniaudio.ma_biquad_config_init(ma_format.ma_format_f32, 2, B0, B1, B2, A0, A1, A2);
-        Miniaudio.ma_biquad_node_reinit(&config, filter);
+        _ = Miniaudio.ma_biquad_node_reinit(&config, filter);
     }
 
     public unsafe void LowFilterChanged()
     {
-        if (!Playing) return;
-        if (highLevel) return;
+        if (!Playing)
+        {
+            return;
+        }
+
+        if (highLevel)
+        {
+            return;
+        }
+
         ma_biquad_config config = Miniaudio.ma_biquad_config_init(ma_format.ma_format_f32, 2, B0, B1, B2, A0, A1, A2);
-        Miniaudio.ma_biquad_node_reinit(&config, filter);
+        _ = Miniaudio.ma_biquad_node_reinit(&config, filter);
     }
 }

@@ -1,22 +1,23 @@
 ﻿using Android.App;
 using Android.Content.PM;
-
 using Avalonia;
 using Avalonia.Android;
 
-namespace NoiseMachineDotNet.Android;
-
-[Activity(
-    Label = "NoiseMachineDotNet.Android",
-    Theme = "@style/MyTheme.NoActionBar",
-    Icon = "@drawable/icon",
-    MainLauncher = true,
-    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
-public class MainActivity : AvaloniaMainActivity<App>
+namespace NoiseMachineDotNet.Android
 {
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    [Activity(
+        Label = "NoiseMachineDotNet.Android",
+        Theme = "@style/MyTheme.NoActionBar",
+        Icon = "@drawable/icon",
+        MainLauncher = true,
+        ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+    public class MainActivity : AvaloniaMainActivity<App>
     {
-        return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
+        protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+        {
+            return base.CustomizeAppBuilder(builder)
+                .WithInterFont()
+                .UseReactiveUI();
+        }
     }
 }
